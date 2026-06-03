@@ -1,0 +1,50 @@
+# Environment file (JANGAN PERNAH UPLOAD!)
+.env
+.env.*
+!.env.example
+
+# Dependencies
+/vendor/
+node_modules/
+
+# Logs
+/storage/logs/*.log
+*.log
+
+# Cache Laravel
+/storage/framework/cache/
+/storage/framework/sessions/
+/storage/framework/views/
+bootstrap/cache/
+
+# IDE
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Composer
+composer.phar
+composer.lock
+
+# NPM
+npm-debug.log
+yarn-error.log
+
+# Backup
+*.bak
+*.backup
+*.sql
+*.sqlite
+*.zip
+*.tar.gz
+
+# PHPUnit
+.phpunit.result.cache
+.coverage
+.phpunit.cache
+
+# OS
+.DS_Store
+Thumbs.db
+ehthumbs.db
