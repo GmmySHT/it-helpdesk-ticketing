@@ -6,7 +6,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <title>Login - Sistem Manajemen Ticket</title>
-    <link rel="icon" href="{{ asset('img/login.jpg') }}">
+    <link rel="icon" href="{{ asset('img/foto.png') }}">
 
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
