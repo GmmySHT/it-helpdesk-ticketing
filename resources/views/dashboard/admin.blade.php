@@ -27,10 +27,10 @@
         </div>
 
         {{-- Quick Actions --}}
-        <div class="row mb-4">
-            <div class="col-12">
+        <div class="row mb-4 mt-4">
+            <div class="col-12 mt-4">
                 <div class="card shadow-sm border-0">
-                    <div class="card-body">
+                    <div class="card-body mt-4">
                         <div class="row g-3">
                             <div class="col-md-3">
                                 <a href="{{ route('tickets.index') }}" class="text-decoration-none">

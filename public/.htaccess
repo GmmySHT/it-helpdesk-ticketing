@@ -5,77 +5,42 @@
 
     RewriteEngine On
 
-    # ============================================
-    # BLOK KEAMANAN - Mencegah akses ke file sensitif
-    # ============================================
+    # Lindungi file sensitif
+    RedirectMatch 403 ^/\.(env|git|htaccess|htpasswd)$
 
-    # Lindungi file .env, .git, dll
-    RedirectMatch 403 ^/\.(env|git|htaccess|htpasswd|ini|log|sh|sql|bak|backup|old|orig|save|swp|sqlite|json|lock|dist|sample|yml|yaml|xml|conf|config|default|example|log|tmp|cache|session)$
-
-    # Lindungi folder storage & vendor dari akses publik
+    # Blok akses langsung ke folder tertentu
     RewriteRule ^(storage|vendor)/.*$ - [F,L,NC]
 
-    # Cegah eksekusi file shell atau skrip berbahaya di folder upload
-    <FilesMatch "\.(php|phtml|php3|php4|php5|phps|pl|py|cgi|sh|bash|exe|js|html|htm|shtml|sql|bin|cmd|bat)$">
-        Order Deny,Allow
-        Deny from all
-    </FilesMatch>
-
-    # Izinkan hanya index.php di root (sesuaikan jika perlu)
-    <Files index.php>
-        Order Allow,Deny
-        Allow from all
-    </Files>
-
-    # ============================================
-    # KEAMANAN HEADER (XSS, Clickjacking, dll)
-    # ============================================
-    <IfModule mod_headers.c>
-        Header set X-Content-Type-Options "nosniff"
-        Header set X-Frame-Options "DENY"
-        Header set X-XSS-Protection "1; mode=block"
-        Header set Referrer-Policy "strict-origin-when-cross-origin"
-        Header set Permissions-Policy "geolocation=(), microphone=(), camera=()"
-    </IfModule>
-
-    # ============================================
-    # LARAVEL DEFAULT RULES
-    # ============================================
-
-    # Handle Authorization Header
+    # Authorization Header
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 
-    # Handle X-XSRF-Token Header
+    # X-XSRF Token
     RewriteCond %{HTTP:x-xsrf-token} .
     RewriteRule .* - [E=HTTP_X_XSRF_TOKEN:%{HTTP:X-XSRF-Token}]
 
-    # Redirect Trailing Slashes If Not A Folder...
+    # Hapus trailing slash
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_URI} (.+)/$
     RewriteRule ^ %1 [L,R=301]
 
-    # Send Requests To Front Controller...
+    # Laravel Front Controller
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
-
-    # ============================================
-    # BLOK IP BERBAHAYA (Contoh - ganti sesuai kebutuhan)
-    # ============================================
-    # Deny from 123.45.67.89
-    # Deny from 10.0.0.0/24
 </IfModule>
 
-# ============================================
-# NON-REWRITE SECURITY (untuk semua request)
-# ============================================
-
-# Cegah directory listing
+# Disable directory listing
 Options -Indexes
 
-# Cegah access ke file .htaccess itu sendiri
-<Files .htaccess>
+# Lindungi .htaccess
+<Files ".htaccess">
     Order Allow,Deny
     Deny from all
 </Files>
+
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "SAMEORIGIN"
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
