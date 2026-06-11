@@ -179,18 +179,6 @@
     gap: 4px;
 }
 
-.pagination .page-item .page-link {
-    padding: 0.35rem 0.7rem;
-    font-size: 0.8rem;
-    border-radius: 6px;
-    color: #0d6efd;
-}
-
-.pagination .page-item.active .page-link {
-    background-color: #0d6efd;
-    border-color: #0d6efd;
-}
-
 .pagination .page-item.disabled .page-link {
     color: #6c757d;
 }
