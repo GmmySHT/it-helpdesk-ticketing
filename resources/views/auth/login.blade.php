@@ -30,9 +30,8 @@
         body {
             font-family: 'Inter', sans-serif;
             min-height: 100vh;
-            background: url("{{ asset('assets/img/dasboard.jpg') }}") no-repeat center center fixed;
+            background: url("{{ asset('assets/img/bg12.png') }}") no-repeat center center fixed;
             background-size: cover;
-            /* background: linear-gradient(135deg, #2b2e3a 0%, #764ba2 50%, #1e3c72 100%); */
             position: relative;
             overflow-x: hidden;
         }
@@ -140,7 +139,7 @@
 
         /* Left Side - Branding */
         .login-brand {
-            background: linear-gradient(135deg, rgba(40, 196, 175, 0.707), rgba(10, 79, 182, 0.476));
+            background: linear-gradient(135deg, rgba(63, 50, 177, 0.171), rgba(10, 79, 182, 0.103));
             padding: 3rem;
             height: 100%;
             display: flex;
@@ -234,83 +233,135 @@
             font-weight: 500;
         }
 
-        /* Right Side - Form */
+        /* ================================================================
+           RIGHT SIDE — LOGIN FORM (Redesigned)
+           ================================================================ */
         .login-form {
-            padding: 3rem;
-            background: rgba(255, 255, 255, 0.95);
+            padding: 3.5rem 3rem;
+            background: #ffffff;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
         }
 
         .form-header {
-            text-align: center;
-            margin-bottom: 2rem;
+            margin-bottom: 2.25rem;
+        }
+
+        .form-icon-badge {
+            width: 56px;
+            height: 56px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #18b5a0, #0d6efd);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: #fff;
+            margin-bottom: 1.25rem;
+            box-shadow: 0 8px 20px -6px rgba(13, 110, 253, 0.45);
         }
 
         .form-title {
-            font-size: 1.8rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, #1e3c72, #2a5298);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 0.5rem;
+            font-size: 1.875rem;
+            font-weight: 800;
+            color: #0f172a;
+            margin-bottom: 0.4rem;
+            letter-spacing: -0.02em;
         }
 
         .form-subtitle {
-            color: #6c757d;
+            color: #94a3b8;
             font-size: 0.9rem;
         }
 
         /* Form Group */
         .form-group {
-            margin-bottom: 1.5rem;
+            margin-bottom: 1.35rem;
         }
 
         .form-label {
             font-weight: 600;
-            color: #1f2937;
+            font-size: 0.825rem;
+            color: #475569;
             margin-bottom: 0.5rem;
-            display: block;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .form-label i {
+            color: #18b5a0;
+            font-size: 0.8rem;
         }
 
         .input-group-custom {
             position: relative;
         }
 
-        .input-group-custom i {
+        .input-group-custom i.field-icon {
             position: absolute;
             left: 1rem;
             top: 50%;
             transform: translateY(-50%);
-            color: #9ca3af;
-            transition: all 0.3s ease;
-            z-index: 1;
+            color: #cbd5e1;
+            font-size: 0.95rem;
+            transition: color 0.2s ease;
+            z-index: 2;
+            pointer-events: none;
         }
 
         .form-control-custom {
             width: 100%;
-            padding: 0.875rem 1rem 0.875rem 2.5rem;
-            border: 2px solid #e5e7eb;
-            border-radius: 12px;
-            font-size: 0.9rem;
-            transition: all 0.3s ease;
-            background: white;
+            padding: 0.95rem 1rem 0.95rem 2.85rem;
+            border: 1.5px solid #e8edf3;
+            border-radius: 14px;
+            font-size: 0.925rem;
+            font-family: 'Inter', sans-serif;
+            color: #0f172a;
+            background: #f8fafc;
+            transition: all 0.2s ease;
+        }
+
+        .form-control-custom::placeholder {
+            color: #b8c2cf;
+        }
+
+        .form-control-custom:hover {
+            border-color: #cbd5e1;
+            background: #fff;
         }
 
         .form-control-custom:focus {
             outline: none;
             border-color: #18b5a0;
-            box-shadow: 0 0 0 3px rgba(24, 181, 160, 0.1);
+            background: #fff;
+            box-shadow: 0 0 0 4px rgba(24, 181, 160, 0.10);
+        }
+
+        .form-control-custom:focus ~ i.field-icon,
+        .input-group-custom:focus-within i.field-icon {
+            color: #18b5a0;
         }
 
         .form-control-custom.error {
             border-color: #ef4444;
+            background: #fef2f2;
+        }
+
+        .form-control-custom.error ~ i.field-icon {
+            color: #ef4444;
         }
 
         .error-message {
             color: #ef4444;
             font-size: 0.75rem;
-            margin-top: 0.25rem;
-            display: block;
+            margin-top: 0.4rem;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
         }
 
         /* Toggle Password */
@@ -320,29 +371,77 @@
             top: 50%;
             transform: translateY(-50%);
             cursor: pointer;
-            color: #9ca3af;
-            transition: all 0.3s ease;
-            z-index: 1;
+            color: #cbd5e1;
+            font-size: 0.95rem;
+            transition: color 0.2s ease;
+            z-index: 2;
         }
 
         .toggle-password:hover {
             color: #18b5a0;
         }
 
+        /* Form Meta Row */
+        .form-meta-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+
+        .remember-check {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .remember-check input {
+            width: 16px;
+            height: 16px;
+            accent-color: #18b5a0;
+            cursor: pointer;
+        }
+
+        .remember-check span {
+            font-size: 0.825rem;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        .forgot-link {
+            font-size: 0.825rem;
+            color: #18b5a0;
+            font-weight: 600;
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        .forgot-link:hover {
+            color: #0d6efd;
+            text-decoration: underline;
+        }
+
         /* Button Login */
         .btn-login {
             width: 100%;
-            padding: 0.875rem;
+            padding: 1rem;
             background: linear-gradient(135deg, #18b5a0, #0d6efd);
             border: none;
-            border-radius: 12px;
+            border-radius: 14px;
             color: white;
-            font-weight: 600;
-            font-size: 1rem;
+            font-weight: 700;
+            font-size: 0.95rem;
+            letter-spacing: 0.01em;
             cursor: pointer;
             transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.6rem;
         }
 
         .btn-login::before {
@@ -352,7 +451,7 @@
             left: -100%;
             width: 100%;
             height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.25), transparent);
             transition: left 0.5s ease;
         }
 
@@ -362,7 +461,7 @@
 
         .btn-login:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 25px -5px rgba(24, 181, 160, 0.4);
+            box-shadow: 0 10px 25px -5px rgba(24, 181, 160, 0.45);
         }
 
         .btn-login:active {
@@ -382,29 +481,74 @@
             border-radius: 50%;
             border-top-color: transparent;
             animation: spin 0.6s linear infinite;
-            margin-left: 8px;
         }
 
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
 
+        /* Divider */
+        .form-divider {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin: 1.75rem 0 1.25rem;
+        }
+
+        .form-divider::before,
+        .form-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: #e8edf3;
+        }
+
+        .form-divider span {
+            font-size: 0.75rem;
+            color: #b8c2cf;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
         /* Developer Note */
         .developer-note {
             text-align: center;
-            margin-top: 1.5rem;
-            font-size: 0.75rem;
-            color: #6c757d;
+            font-size: 0.8rem;
+            color: #94a3b8;
+        }
+
+        .developer-note i {
+            color: #18b5a0;
+            margin-right: 0.25rem;
         }
 
         .developer-note a {
             color: #18b5a0;
             text-decoration: none;
-            font-weight: 600;
+            font-weight: 700;
+            transition: color 0.2s ease;
         }
 
         .developer-note a:hover {
+            color: #0d6efd;
             text-decoration: underline;
+        }
+
+        /* Security badge */
+        .security-note {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+            margin-top: 1.25rem;
+            font-size: 0.75rem;
+            color: #b8c2cf;
+        }
+
+        .security-note i {
+            color: #94a3b8;
+            font-size: 0.8rem;
         }
 
         /* Responsive */
@@ -418,7 +562,7 @@
             }
 
             .login-form {
-                padding: 2rem;
+                padding: 2.5rem 1.75rem;
             }
 
             .form-title {
@@ -434,8 +578,8 @@
 
     <div class="login-wrapper">
         <div class="login-card">
-            <!-- Left Side - Branding -->
             <div class="row g-0">
+                <!-- Left Side - Branding -->
                 <div class="col-lg-6">
                     <div class="login-brand">
                         <div class="brand-logo">
@@ -468,24 +612,26 @@
                     </div>
                 </div>
 
-                <!-- Right Side - Form -->
+                <!-- Right Side - Form (Redesigned) -->
                 <div class="col-lg-6">
                     <div class="login-form">
                         <div class="form-header">
+                            <div class="form-icon-badge">
+                                <i class="fas fa-user-lock"></i>
+                            </div>
                             <h3 class="form-title">Selamat Datang Kembali</h3>
-                            <p class="form-subtitle">Silakan masukkan kredensial Anda untuk melanjutkan</p>
+                            <p class="form-subtitle">Silakan masuk untuk mengakses dashboard tiket Anda</p>
                         </div>
 
                         <form method="POST" action="{{ route('login') }}" id="loginForm">
                             @csrf
 
-                            <!-- ✅ MODIFIKASI: Ubah dari email menjadi login (username atau email) -->
                             <div class="form-group">
-                                <label class="form-label">
-                                    <i class="fas fa-user me-2"></i>Email atau Username
+                                <label class="form-label" for="login">
+                                    <i class="fas fa-user"></i>Email atau Username
                                 </label>
                                 <div class="input-group-custom">
-                                    <i class="fas fa-envelope"></i>
+                                    <i class="fas fa-envelope field-icon"></i>
                                     <input type="text"
                                            name="login"
                                            id="login"
@@ -496,16 +642,16 @@
                                            autofocus>
                                 </div>
                                 @error('login')
-                                    <span class="error-message">{{ $message }}</span>
+                                    <span class="error-message"><i class="fas fa-circle-exclamation"></i>{{ $message }}</span>
                                 @enderror
                             </div>
 
                             <div class="form-group">
-                                <label class="form-label">
-                                    <i class="fas fa-lock me-2"></i>Password
+                                <label class="form-label" for="password">
+                                    <i class="fas fa-lock"></i>Password
                                 </label>
                                 <div class="input-group-custom">
-                                    <i class="fas fa-lock"></i>
+                                    <i class="fas fa-key field-icon"></i>
                                     <input type="password"
                                            name="password"
                                            id="password"
@@ -517,22 +663,35 @@
                                     </span>
                                 </div>
                                 @error('password')
-                                    <span class="error-message">{{ $message }}</span>
+                                    <span class="error-message"><i class="fas fa-circle-exclamation"></i>{{ $message }}</span>
                                 @enderror
                             </div>
 
+                            <div class="form-meta-row">
+                                <label class="remember-check">
+                                    <input type="checkbox" name="remember" id="remember">
+                                    <span>Ingat saya</span>
+                                </label>
+                                @if (Route::has('password.request'))
+                                    <a class="forgot-link" href="{{ route('password.request') }}">Lupa password?</a>
+                                @endif
+                            </div>
+
                             <button type="submit" class="btn-login" id="loginButton">
-                                <i class="fas fa-sign-in-alt me-2"></i>Masuk ke Sistem
+                                <i class="fas fa-sign-in-alt"></i>Masuk ke Sistem
                             </button>
 
+                            <div class="security-note">
+                                <i class="fas fa-shield-halved"></i>
+                                <span>Koneksi Anda terenkripsi dan aman</span>
+                            </div>
+
+                            <div class="form-divider"><span>Bantuan</span></div>
+
                             <div class="developer-note">
-                                <p>
-                                    <i class="fas fa-headset me-1"></i>
-                            Butuh bantuan? Hubungi
-                            <a href="https://wa.me/6288223644049?text=Halo%20saya%20ingin%20bertanya" target="_blank">
-                                FirazF
-                            </a>
-                         </p>
+                                <i class="fas fa-headset"></i>
+                                Butuh bantuan? Hubungi
+                                <a href="https://wa.me/6288223644049?text=Halo%20saya%20ingin%20bertanya" target="_blank">FirazF</a>
                             </div>
                         </form>
                     </div>
@@ -609,8 +768,8 @@
             input.addEventListener('input', function() {
                 if (this.classList.contains('error')) {
                     this.classList.remove('error');
-                    const errorMessage = this.parentElement.nextElementSibling;
-                    if (errorMessage && errorMessage.classList.contains('error-message')) {
+                    const errorMessage = this.parentElement.parentElement.querySelector('.error-message');
+                    if (errorMessage) {
                         errorMessage.style.display = 'none';
                     }
                 }

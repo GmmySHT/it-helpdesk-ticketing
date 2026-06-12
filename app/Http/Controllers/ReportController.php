@@ -8,6 +8,8 @@ use App\Models\User;
 use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Barryvdh\DomPDF\Facade\Pdf;
+
 use Carbon\Carbon;
 
 class ReportController extends Controller
@@ -175,16 +177,6 @@ class ReportController extends Controller
         ]);
     }
 
-    // ══════════════════════════════════════════════════════════
-    //  EXPORT stubs
-    // ══════════════════════════════════════════════════════════
-
-    public function exportPdf(Request $request)
-    {
-        // TODO: implement with barryvdh/laravel-dompdf
-        return response()->json(['message' => 'PDF export coming soon']);
-    }
-
     public function exportExcel(Request $request)
     {
         // TODO: implement with Maatwebsite/Laravel-Excel
@@ -333,5 +325,64 @@ class ReportController extends Controller
         $closed   = (clone $q)->where('status', 'closed')->count();
 
         return compact('total', 'open', 'resolved', 'closed') + ['base' => $q];
+    }
+
+    /**
+     * Export data ke PDF menggunakan view dari folder reports
+     */
+    public function exportPDF(Request $request)
+    {
+        // Ambil data (sesuaikan dengan model dan query Anda)
+        $data = Ticket::when($request->start_date, function($query, $start_date) {
+                return $query->whereDate('tanggal', '>=', $start_date);
+            })
+            ->when($request->end_date, function($query, $end_date) {
+                return $query->whereDate('tanggal', '<=', $end_date);
+            })
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        // Data untuk summary (opsional)
+        $summary = [
+            'total' => $data->count(),
+            'active' => $data->where('status', 'active')->count(),
+            'inactive' => $data->where('status', 'inactive')->count(),
+        ];
+
+        // Siapkan data untuk view
+        $pdfData = [
+            'title' => 'LAPORAN DATA ' . strtoupper($request->jenis_laporan ?? 'UMUM'),
+            'subtitle' => 'Periode ' . ($request->start_date ? Carbon::parse($request->start_date)->format('d/m/Y') : 'Semua') .
+                         ' - ' . ($request->end_date ? Carbon::parse($request->end_date)->format('d/m/Y') : 'Semua'),
+            'data' => $data,
+            'date' => Carbon::now(),
+            'start_date' => $request->start_date,
+            'end_date' => $request->end_date,
+            'summary' => $summary,
+            'notes' => 'Laporan ini dibuat berdasarkan data yang tersedia di sistem.',
+            'show_signature' => true,
+            'logo' => public_path('images/logo.png'), // Sesuaikan path logo Anda
+        ];
+
+        // Load view dari folder reports
+        $pdf = PDF::loadView('reports.laporan-pdf', $pdfData);
+
+        // Set ukuran kertas dan orientasi
+        $pdf->setPaper('A4', 'landscape'); // atau 'portrait'
+
+        // Optional: Set margin
+        $pdf->setOptions([
+            'defaultFont' => 'sans-serif',
+            'isHtml5ParserEnabled' => true,
+            'isRemoteEnabled' => true // Jika menggunakan gambar dari URL
+        ]);
+
+        // Download file PDF
+        $fileName = 'laporan_' . Carbon::now()->format('Ymd_His') . '.pdf';
+
+        return $pdf->download($fileName);
+
+        // Atau jika ingin ditampilkan di browser:
+        // return $pdf->stream($fileName);
     }
 }

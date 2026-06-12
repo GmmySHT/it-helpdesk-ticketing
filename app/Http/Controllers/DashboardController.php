@@ -46,6 +46,7 @@ class DashboardController extends Controller
             ->toArray();
 
         $recentTickets = Ticket::with(['user', 'category'])->latest()->take(6)->get();
+        $recentTicketsCount = Ticket::where('created_at', '>=', now()->subDays(30))->count();
         $recentUsers = User::latest()->take(6)->get();
         $categoryCounts = Category::withCount('tickets')->get();
 
@@ -96,7 +97,7 @@ class DashboardController extends Controller
             'totalTickets', 'openTickets', 'resolvedTickets', 'closedTickets',
             'totalChange', 'openChange', 'resolvedChange', 'closedChange',
             'months', 'ticketCountsByMonth', 'statusCounts',
-            'recentTickets', 'recentUsers', 'categoryCounts',
+            'recentTickets', 'recentUsers', 'categoryCounts','recentTicketsCount',
             'overdueTickets', 'slaComplianceRate', 'avgResolutionTime',
             'reopenRate', 'itStaffPerformance'
         );

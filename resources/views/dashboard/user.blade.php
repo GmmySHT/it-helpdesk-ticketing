@@ -2,414 +2,311 @@
 
 @section('title', 'Dashboard - My Tickets')
 
+@push('styles')
+<link rel="stylesheet" href="{{ asset('assets/css/admin-dashboard.css') }}">
+@endpush
+
 @section('content')
-<div class="container-fluid px-4">
-    {{-- Page Header dengan Container Biru --}}
-    <div class="page-header-wrapper mb-4">
-        <div class="page-header-blue">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h1 class="page-title">
-                        <i class="fas fa-tachometer-alt me-2"></i>Dashboard Saya
-                    </h1>
-                    <p class="page-subtitle">Kelola dan pantau ticket permintaan Anda</p>
-                </div>
-                <div>
-                    <a href="{{ route('tickets.create') }}" class="btn btn-light">
-                        <i class="fas fa-plus-circle me-2"></i>Buat Ticket Baru
-                    </a>
-                </div>
+<div class="dash-wrapper">
+
+    {{-- ── HEADER ── --}}
+    <div class="dash-header">
+        <div class="dash-header-inner">
+            <div>
+                <h1 class="dash-header-title">
+                    <i class="fas fa-tachometer-alt"></i>
+                    Dashboard Saya
+                </h1>
+                <p class="dash-header-subtitle">Kelola dan pantau ticket permintaan Anda</p>
+            </div>
+            <div class="dash-header-widgets">
+                <a href="{{ route('tickets.create') }}" class="btn-header">
+                    <i class="fas fa-plus-circle me-1"></i> Buat Ticket Baru
+                </a>
             </div>
         </div>
     </div>
 
-    <div class="row">
-        <!-- KPI Cards -->
-        <div class="col-lg-4 col-md-6 mb-4">
-            <div class="card stat-card h-100">
-                <div class="card-body">
-                    <div class="stat-icon bg-primary">
-                        <i class="fas fa-ticket-alt"></i>
-                    </div>
-                    <div class="stat-info">
-                        <h3>{{ $myTicketsCount ?? 0 }}</h3>
-                        <span>Total Ticket Saya</span>
-                        <small class="text-muted d-block mt-1">Semua ticket yang Anda buat</small>
-                    </div>
-                </div>
+    {{-- ── STAT CARDS ── --}}
+    <div class="stat-grid" style="grid-template-columns: repeat(3, 1fr);">
+
+        {{-- Total Ticket --}}
+        <div class="stat-card">
+            <div class="stat-card-info">
+                <div class="stat-card-label">Total Ticket Saya</div>
+                <div class="stat-card-value">{{ $myTicketsCount ?? 0 }}</div>
+                <div class="stat-card-trend neutral">Semua ticket yang Anda buat</div>
+            </div>
+            <div class="stat-card-icon indigo">
+                <i class="fas fa-ticket-alt"></i>
             </div>
         </div>
 
-        <div class="col-lg-4 col-md-6 mb-4">
-            <div class="card stat-card h-100">
-                <div class="card-body">
-                    <div class="stat-icon bg-warning">
-                        <i class="fas fa-clock"></i>
-                    </div>
-                    <div class="stat-info">
-                        <h3>{{ $myOpenCount ?? 0 }}</h3>
-                        <span>Ticket Aktif</span>
-                        <small class="text-muted d-block mt-1">Open / In Queue / In Progress</small>
-                    </div>
-                </div>
+        {{-- Ticket Aktif --}}
+        <div class="stat-card">
+            <div class="stat-card-info">
+                <div class="stat-card-label">Ticket Aktif</div>
+                <div class="stat-card-value warn">{{ $myOpenCount ?? 0 }}</div>
+                <div class="stat-card-trend neutral">Open / In Queue / In Progress</div>
+            </div>
+            <div class="stat-card-icon amber">
+                <i class="fas fa-clock"></i>
             </div>
         </div>
 
-        <div class="col-lg-4 col-md-12 mb-4">
-            <div class="card stat-card h-100">
-                <div class="card-body">
-                    <div class="stat-icon bg-info">
-                        <i class="fas fa-chart-pie"></i>
-                    </div>
-                    <div class="stat-info w-100">
-                        <span>Status Terbanyak (Global)</span>
-                        @if(!empty($statusCounts))
-                            <div class="mt-2">
-                                @foreach($statusCounts as $st => $cnt)
-                                    <div class="d-flex justify-content-between small mb-1">
-                                        <span class="text-capitalize">
-                                            @php
-                                                $statusIcons = [
-                                                    'open' => '📋',
-                                                    'in_queue' => '⏳',
-                                                    'in_progress' => '⚙️',
-                                                    'resolved' => '✅',
-                                                    'closed' => '📦'
-                                                ];
-                                                $icon = $statusIcons[$st] ?? '📌';
-                                            @endphp
-                                            {{ $icon }} {{ str_replace('_',' ', $st) }}
-                                        </span>
-                                        <strong class="text-primary">{{ $cnt }}</strong>
-                                    </div>
-                                @endforeach
+        {{-- Status Global --}}
+        <div class="stat-card">
+            <div class="stat-card-info">
+                <div class="stat-card-label">Status Terbanyak (Global)</div>
+                @if(!empty($statusCounts))
+                    <div class="mt-2">
+                        @php
+                            $statusIcons = [
+                                'open'        => '📋',
+                                'in_queue'    => '⏳',
+                                'in_progress' => '⚙️',
+                                'resolved'    => '✅',
+                                'closed'      => '📦',
+                            ];
+                        @endphp
+                        @foreach($statusCounts as $st => $cnt)
+                            <div class="d-flex justify-content-between" style="font-size:.78rem; margin-bottom:4px;">
+                                <span style="color:var(--text-secondary)">
+                                    {{ $statusIcons[$st] ?? '📌' }} {{ str_replace('_', ' ', ucfirst($st)) }}
+                                </span>
+                                <strong style="color:var(--accent-primary)">{{ $cnt }}</strong>
                             </div>
-                        @else
-                            <div class="small text-muted mt-2">Belum ada data status.</div>
-                        @endif
+                        @endforeach
                     </div>
-                </div>
+                @else
+                    <div style="font-size:.78rem; color:var(--text-muted); margin-top:8px;">Belum ada data status.</div>
+                @endif
+            </div>
+            <div class="stat-card-icon teal">
+                <i class="fas fa-chart-pie"></i>
             </div>
         </div>
+
     </div>
 
-    <div class="row">
-        <!-- Recent My Tickets (table) -->
-        <div class="col-lg-8">
-            <div class="card">
-                <div class="card-header">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h5 class="card-title mb-0">
-                            <i class="fas fa-history me-2 text-primary"></i>Ticket Terbaru Saya
-                        </h5>
-                        <a href="{{ route('tickets.index', ['mine'=>1]) }}" class="btn btn-sm btn-outline-primary">
-                            <i class="fas fa-eye me-1"></i>Lihat Semua
-                        </a>
-                    </div>
-                </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0">
-                            <thead class="bg-primary bg-opacity-10">
-                                <tr>
-                                    <th class="ps-3 py-3">#</th>
-                                    <th class="py-3">Ticket</th>
-                                    <th class="py-3">Judul</th>
-                                    <th class="py-3">Kategori</th>
-                                    <th class="py-3">Prioritas</th>
-                                    <th class="py-3">Status</th>
-                                    <th class="py-3">Dibuat</th>
-                                    <th class="text-center py-3">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse($recentMyTickets as $t)
-                                <tr>
-                                    <td class="ps-3 fw-bold text-primary">{{ $loop->iteration }}</td>
-                                    <td>
-                                        <a href="{{ route('tickets.show', $t) }}" class="fw-semibold text-decoration-none text-dark">
-                                            {{ $t->ticket_number }}
-                                        </a>
-                                    </td>
-                                    <td>{{ \Illuminate\Support\Str::limit($t->title, 50) }}</td>
-                                    <td>
-                                        <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2">
-                                            <i class="fas fa-tag me-1"></i>
-                                            {{ $t->category->name ?? '-' }}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        @php
-                                            $priorityColors = [
-                                                'low' => 'success',
-                                                'medium' => 'warning',
-                                                'high' => 'danger',
-                                                'urgent' => 'danger'
-                                            ];
-                                            $priorityIcons = [
-                                                'low' => 'fas fa-arrow-down',
-                                                'medium' => 'fas fa-minus',
-                                                'high' => 'fas fa-arrow-up',
-                                                'urgent' => 'fas fa-exclamation-triangle'
-                                            ];
-                                            $color = $priorityColors[$t->priority] ?? 'primary';
-                                            $icon = $priorityIcons[$t->priority] ?? 'fas fa-flag';
-                                        @endphp
-                                        <span class="badge bg-{{ $color }} bg-opacity-10 text-{{ $color }} px-3 py-2">
-                                            <i class="{{ $icon }} me-1"></i> {{ ucfirst($t->priority) }}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        @php
-                                            $statusIcons = [
-                                                'open' => 'fas fa-envelope',
-                                                'in_queue' => 'fas fa-clock',
-                                                'in_progress' => 'fas fa-cogs',
-                                                'resolved' => 'fas fa-check-circle',
-                                                'closed' => 'fas fa-archive'
-                                            ];
-                                            $statusColors = [
-                                                'open' => 'primary',
-                                                'in_queue' => 'info',
-                                                'in_progress' => 'warning',
-                                                'resolved' => 'success',
-                                                'closed' => 'secondary'
-                                            ];
-                                            $statusIcon = $statusIcons[$t->status] ?? 'fas fa-question';
-                                            $statusColor = $statusColors[$t->status] ?? 'primary';
-                                        @endphp
-                                        <span class="badge bg-{{ $statusColor }} bg-opacity-10 text-{{ $statusColor }} px-3 py-2">
-                                            <i class="{{ $statusIcon }} me-1"></i>
-                                            {{ ucfirst(str_replace('_',' ', $t->status)) }}
-                                        </span>
-                                    </td>
-                                    <td class="text-nowrap">
-                                        <div class="small">
-                                            <i class="far fa-calendar-alt me-1 text-muted"></i>
-                                            {{ $t->created_at->format('d M Y') }}
-                                        </div>
-                                        <div class="small text-muted">
-                                            <i class="far fa-clock me-1"></i>
-                                            {{ $t->created_at->diffForHumans() }}
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="d-flex gap-1 justify-content-center">
-                                            <a href="{{ route('tickets.show', $t) }}"
-                                               class="btn btn-sm btn-outline-primary rounded-circle"
-                                               style="width: 32px; height: 32px;"
-                                               title="Lihat Detail">
-                                                <i class="fas fa-eye"></i>
-                                            </a>
+    {{-- ── MAIN GRID: Tabel + Sidebar ── --}}
+    <div class="main-grid">
 
-                                            @if(in_array($t->status, ['open','in_queue']))
-                                                <a href="{{ route('tickets.edit', $t) }}"
-                                                   class="btn btn-sm btn-outline-warning rounded-circle"
-                                                   style="width: 32px; height: 32px;"
-                                                   title="Edit Ticket">
-                                                    <i class="fas fa-edit"></i>
-                                                </a>
-                                            @endif
-                                        </div>
-                                    </td>
-                                </tr>
-                                @empty
-                                <tr>
-                                    <td colspan="8" class="text-center py-5">
-                                        <div class="empty-state">
-                                            <i class="fas fa-ticket-alt fa-3x mb-3 text-muted"></i>
-                                            <p class="text-muted mb-3">Anda belum membuat ticket</p>
-                                            <a href="{{ route('tickets.create') }}" class="btn btn-primary">
-                                                <i class="fas fa-plus-circle me-1"></i>
-                                                Buat Ticket Pertama
-                                            </a>
-                                        </div>
-                                    </td>
-                                </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+        {{-- ── TABEL TICKET TERBARU ── --}}
+        <div class="glass-card">
+            <div class="glass-card-header">
+                <h5 class="glass-card-title">
+                    <i class="fas fa-history"></i> Ticket Terbaru Saya
+                </h5>
+                <a href="{{ route('tickets.index', ['mine' => 1]) }}" class="btn-glass">
+                    <i class="fas fa-eye me-1"></i> Lihat Semua
+                </a>
+            </div>
+
+            <div class="table-scroll">
+                <table class="glass-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Ticket</th>
+                            <th>Judul</th>
+                            <th>Kategori</th>
+                            <th>Prioritas</th>
+                            <th>Status</th>
+                            <th>Dibuat</th>
+                            <th style="text-align:center">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($recentMyTickets as $t)
+                        @php
+                            $priorityBadge = [
+                                'low'    => ['cls' => 'badge-priority-low',    'icon' => 'fas fa-arrow-down'],
+                                'medium' => ['cls' => 'badge-priority-medium', 'icon' => 'fas fa-minus'],
+                                'high'   => ['cls' => 'badge-priority-high',   'icon' => 'fas fa-arrow-up'],
+                                'urgent' => ['cls' => 'badge-priority-urgent', 'icon' => 'fas fa-exclamation-triangle'],
+                            ];
+                            $statusBadge = [
+                                'open'        => ['cls' => 'badge-status-open',        'icon' => 'fas fa-envelope'],
+                                'in_queue'    => ['cls' => 'badge-status-open',        'icon' => 'fas fa-clock'],
+                                'in_progress' => ['cls' => 'badge-status-in_progress', 'icon' => 'fas fa-cogs'],
+                                'resolved'    => ['cls' => 'badge-status-resolved',    'icon' => 'fas fa-check-circle'],
+                                'closed'      => ['cls' => 'badge-status-closed',      'icon' => 'fas fa-archive'],
+                            ];
+                            $pb = $priorityBadge[$t->priority] ?? ['cls'=>'badge-priority-medium','icon'=>'fas fa-flag'];
+                            $sb = $statusBadge[$t->status]     ?? ['cls'=>'badge-status-open','icon'=>'fas fa-question'];
+                        @endphp
+                        <tr>
+                            <td style="font-weight:700; color:var(--accent-primary)">{{ $loop->iteration }}</td>
+
+                            <td>
+                                <a href="{{ route('tickets.show', $t) }}" class="ticket-link">
+                                    {{ $t->ticket_number }}
+                                </a>
+                            </td>
+
+                            <td>
+                                <span class="ticket-title-text">
+                                    {{ \Illuminate\Support\Str::limit($t->title, 45) }}
+                                </span>
+                            </td>
+
+                            <td>
+                                <span class="badge-pill" style="background:#ede9fe; color:#4338ca;">
+                                    <i class="fas fa-tag" style="font-size:.65rem"></i>
+                                    {{ $t->category->name ?? '-' }}
+                                </span>
+                            </td>
+
+                            <td>
+                                <span class="badge-pill {{ $pb['cls'] }}">
+                                    <i class="{{ $pb['icon'] }}" style="font-size:.65rem"></i>
+                                    {{ ucfirst($t->priority) }}
+                                </span>
+                            </td>
+
+                            <td>
+                                <span class="badge-pill {{ $sb['cls'] }}">
+                                    <i class="{{ $sb['icon'] }}" style="font-size:.65rem"></i>
+                                    {{ ucfirst(str_replace('_', ' ', $t->status)) }}
+                                </span>
+                            </td>
+
+                            <td class="text-nowrap">
+                                <div class="text-small">
+                                    <i class="far fa-calendar-alt me-1"></i>
+                                    {{ $t->created_at->format('d M Y') }}
+                                </div>
+                                <div style="font-size:.7rem; color:var(--text-muted); margin-top:2px;">
+                                    <i class="far fa-clock me-1"></i>
+                                    {{ $t->created_at->diffForHumans() }}
+                                </div>
+                            </td>
+
+                            <td style="text-align:center">
+                                <div style="display:flex; gap:4px; justify-content:center;">
+                                    <a href="{{ route('tickets.show', $t) }}"
+                                       class="btn-action"
+                                       title="Lihat Detail">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    @if(in_array($t->status, ['open','in_queue']))
+                                        <a href="{{ route('tickets.edit', $t) }}"
+                                           class="btn-action btn-action--warn"
+                                           title="Edit Ticket">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                    @endif
+                                </div>
+                            </td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="8">
+                                <div class="empty-state">
+                                    <i class="fas fa-ticket-alt"></i>
+                                    <p>Anda belum membuat ticket</p>
+                                    <a href="{{ route('tickets.create') }}" class="btn-glass mt-2">
+                                        <i class="fas fa-plus-circle me-1"></i> Buat Ticket Pertama
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
             </div>
         </div>
 
-        <!-- Chart / Summary di sebelah kanan -->
-        <div class="col-lg-4">
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-chart-line me-2 text-primary"></i>Tiket Per Bulan
+        {{-- ── SIDEBAR ── --}}
+        <div class="sidebar-stack">
+
+            {{-- Chart --}}
+            <div class="glass-card">
+                <div class="glass-card-header">
+                    <h5 class="glass-card-title">
+                        <i class="fas fa-chart-bar"></i> Tiket Per Bulan
                     </h5>
-                    <small class="text-muted">6 bulan terakhir</small>
+                    <span style="font-size:.7rem; color:var(--text-muted);">6 bulan terakhir</span>
                 </div>
-                <div class="card-body">
-                    <canvas id="userTicketsChart" style="max-height: 240px; width: 100%;"></canvas>
+                <div class="glass-card-body">
+                    <div style="position:relative; height:200px;">
+                        <canvas id="userTicketsChart"></canvas>
+                    </div>
                 </div>
             </div>
 
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-lightbulb me-2 text-warning"></i>Tips Penting
+            {{-- Tips --}}
+            <div class="glass-card">
+                <div class="glass-card-header">
+                    <h5 class="glass-card-title">
+                        <i class="fas fa-lightbulb"></i> Tips Penting
                     </h5>
                 </div>
-                <div class="card-body">
+                <div class="glass-card-body">
                     <ul class="list-unstyled mb-0">
-                        <li class="mb-3 d-flex align-items-start">
-                            <i class="fas fa-check-circle text-primary me-2 mt-1"></i>
-                            <span class="small">Jelaskan masalah secara singkat dan sertakan langkah reproduksi bila ada.</span>
+                        @foreach([
+                            ['fas fa-check-circle', 'Jelaskan masalah secara singkat dan sertakan langkah reproduksi bila ada.'],
+                            ['fas fa-tag',          'Tambahkan kategori dan prioritas dengan tepat agar admin dapat menindaklanjuti cepat.'],
+                            ['fas fa-bell',         'Periksa notifikasi untuk mengetahui update progress ticket Anda.'],
+                            ['fas fa-comment',      'Jangan ragu berkomentar jika ada informasi tambahan yang perlu disampaikan.'],
+                        ] as [$icon, $text])
+                        <li style="display:flex; align-items:flex-start; gap:8px; margin-bottom:.85rem; font-size:.8rem; color:var(--text-secondary); line-height:1.5;">
+                            <i class="{{ $icon }}" style="color:var(--accent-primary); margin-top:2px; flex-shrink:0;"></i>
+                            <span>{{ $text }}</span>
                         </li>
-                        <li class="mb-3 d-flex align-items-start">
-                            <i class="fas fa-tag text-primary me-2 mt-1"></i>
-                            <span class="small">Tambahkan kategori dan prioritas dengan tepat agar admin dapat menindaklanjuti cepat.</span>
-                        </li>
-                        <li class="mb-3 d-flex align-items-start">
-                            <i class="fas fa-bell text-primary me-2 mt-1"></i>
-                            <span class="small">Periksa notifikasi untuk mengetahui update progress ticket Anda.</span>
-                        </li>
-                        <li class="d-flex align-items-start">
-                            <i class="fas fa-comment text-primary me-2 mt-1"></i>
-                            <span class="small">Jangan ragu untuk berkomentar jika ada informasi tambahan yang perlu disampaikan.</span>
-                        </li>
+                        @endforeach
                     </ul>
                 </div>
             </div>
-        </div>
-    </div>
-</div>
 
+        </div>{{-- /sidebar-stack --}}
+    </div>{{-- /main-grid --}}
+
+</div>{{-- /dash-wrapper --}}
+
+{{-- ── Tambahan CSS khusus halaman user ── --}}
 <style>
-    /* Stat Card styling */
-    .stat-card {
-        border: none;
-        border-radius: 15px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-        background: white !important;
-        overflow: hidden;
-        position: relative;
-    }
+    /* Override: hapus fixed bg admin agar background page tetap */
+    .dash-wrapper { min-height: unset; }
 
-    .stat-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 4px;
-        background: linear-gradient(135deg, var(--tosca-primary), var(--tosca-dark));
+    /* Action button bulat */
+    .btn-action {
+        width: 30px; height: 30px;
+        border-radius: 50%;
+        border: 1px solid var(--border);
+        background: var(--bg-surface);
+        display: inline-flex; align-items: center; justify-content: center;
+        font-size: .75rem; color: var(--accent-primary);
+        text-decoration: none;
+        transition: background .15s;
     }
+    .btn-action:hover { background: #dbeafe; color: var(--accent-primary); }
+    .btn-action--warn { color: var(--accent-amber); }
+    .btn-action--warn:hover { background: #fef3c7; }
 
-    .stat-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    /* Header button putih */
+    .btn-header {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: .55rem 1.1rem;
+        border-radius: var(--radius-full);
+        font-size: .78rem; font-weight: 600;
+        color: #fff;
+        background: rgba(255,255,255,.18);
+        border: 1px solid rgba(255,255,255,.28);
+        text-decoration: none;
+        transition: background .15s;
     }
+    .btn-header:hover { background: rgba(255,255,255,.28); color: #fff; }
 
-    .stat-card .card-body {
-        display: flex;
-        align-items: flex-start;
-        padding: 1.5rem;
-    }
-
-    .stat-icon {
-        width: 54px;
-        height: 54px;
-        border-radius: 14px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-right: 1rem;
-        flex-shrink: 0;
-    }
-
-    .stat-icon i {
-        font-size: 1.5rem;
-        color: white;
-    }
-
-    .stat-info {
-        flex: 1;
-    }
-
-    .stat-info h3 {
-        font-size: 1.75rem;
-        font-weight: 700;
-        margin-bottom: 0.25rem;
-        color: #1f2937;
-    }
-
-    .stat-info span {
-        font-size: 0.875rem;
-        color: #6b7280;
-        font-weight: 500;
-    }
-
-    /* Card header styling */
-    .card-header {
-        background: white !important;
-        border-bottom: 1px solid #e5e7eb !important;
-        padding: 1rem 1.5rem;
-    }
-
-    .card-title {
-        font-size: 1rem;
-        font-weight: 600;
-        color: #1f2937;
-    }
-
-    /* Empty state styling */
-    .empty-state {
-        text-align: center;
-        padding: 2rem;
-    }
-
-    .empty-state i {
-        opacity: 0.5;
-    }
-
-    /* Table styling */
-    .table td, .table th {
-        padding: 1rem 0.75rem;
-    }
-
-    /* Responsive */
+    /* Stat grid 3 kolom di layar kecil */
     @media (max-width: 768px) {
-        .stat-card .card-body {
-            padding: 1rem;
-        }
-
-        .stat-icon {
-            width: 45px;
-            height: 45px;
-        }
-
-        .stat-icon i {
-            font-size: 1.2rem;
-        }
-
-        .stat-info h3 {
-            font-size: 1.25rem;
-        }
-
-        .table td, .table th {
-            padding: 0.75rem 0.5rem;
-        }
-
-        .btn-sm.rounded-circle {
-            width: 28px !important;
-            height: 28px !important;
-            font-size: 0.7rem;
-        }
+        .stat-grid { grid-template-columns: 1fr 1fr !important; }
+        .stat-grid .stat-card:last-child { grid-column: 1 / -1; }
+        .main-grid { grid-template-columns: 1fr !important; }
     }
-
-    /* Tips list styling */
-    .list-unstyled li {
-        transition: transform 0.2s ease;
-    }
-
-    .list-unstyled li:hover {
-        transform: translateX(5px);
+    @media (max-width: 480px) {
+        .stat-grid { grid-template-columns: 1fr !important; }
     }
 </style>
 @endsection
@@ -417,92 +314,61 @@
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Data untuk chart
-        const months = {!! json_encode($months ?? []) !!};
-        const dataCounts = {!! json_encode($ticketCountsByMonth ?? []) !!};
+document.addEventListener('DOMContentLoaded', function () {
+    const months     = {!! json_encode($months ?? []) !!};
+    const dataCounts = {!! json_encode($ticketCountsByMonth ?? []) !!};
+    const canvas     = document.getElementById('userTicketsChart');
 
-        const chartCanvas = document.getElementById('userTicketsChart');
+    if (!canvas) return;
 
-        if (months.length && dataCounts.length && chartCanvas) {
-            const ctx = chartCanvas.getContext('2d');
-            new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: months,
-                    datasets: [{
-                        label: 'Jumlah Tiket',
-                        data: dataCounts,
-                        borderWidth: 1,
-                        backgroundColor: 'rgba(24, 181, 160, 0.7)',
-                        borderColor: '#18b5a0',
-                        borderRadius: 8,
-                        barPercentage: 0.7,
-                        categoryPercentage: 0.8
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: {
-                        legend: {
-                            position: 'top',
-                            labels: {
-                                font: {
-                                    size: 11
-                                }
-                            }
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    return `Jumlah: ${context.raw} tiket`;
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                precision: 0,
-                                stepSize: 1,
-                                font: {
-                                    size: 10
-                                }
-                            },
-                            grid: {
-                                display: true,
-                                color: 'rgba(0, 0, 0, 0.05)'
-                            }
-                        },
-                        x: {
-                            ticks: {
-                                font: {
-                                    size: 10
-                                }
-                            },
-                            grid: {
-                                display: false
-                            }
+    if (months.length && dataCounts.length) {
+        new Chart(canvas.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: months,
+                datasets: [{
+                    label: 'Jumlah Tiket',
+                    data: dataCounts,
+                    backgroundColor: 'rgba(29,111,184,0.15)',
+                    borderColor: '#1d6fb8',
+                    borderWidth: 1.5,
+                    borderRadius: 6,
+                    barPercentage: 0.65,
+                    categoryPercentage: 0.75,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: ctx => `${ctx.raw} tiket`
                         }
                     }
-                }
-            });
-        } else if (chartCanvas) {
-            // Tampilkan pesan jika tidak ada data
-            const parentCard = chartCanvas.closest('.card');
-            if (parentCard) {
-                const bodyCard = parentCard.querySelector('.card-body');
-                if (bodyCard && !bodyCard.querySelector('.no-data-message')) {
-                    const noDataMsg = document.createElement('div');
-                    noDataMsg.className = 'text-center text-muted py-4 no-data-message';
-                    noDataMsg.innerHTML = '<i class="fas fa-chart-line fa-2x mb-2 d-block"></i>Tidak ada data chart untuk ditampilkan';
-                    bodyCard.appendChild(noDataMsg);
-                    chartCanvas.style.display = 'none';
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { precision: 0, stepSize: 1, font: { size: 10 }, color: '#94a3b8' },
+                        grid: { color: 'rgba(0,0,0,0.04)' },
+                        border: { display: false }
+                    },
+                    x: {
+                        ticks: { font: { size: 10 }, color: '#94a3b8' },
+                        grid: { display: false },
+                        border: { display: false }
+                    }
                 }
             }
-        }
-    });
+        });
+    } else {
+        const noData = document.createElement('div');
+        noData.style.cssText = 'text-align:center; padding:2rem; color:#94a3b8; font-size:.8rem;';
+        noData.innerHTML = '<i class="fas fa-chart-bar" style="font-size:1.5rem; display:block; margin-bottom:.5rem; opacity:.4;"></i>Tidak ada data chart';
+        canvas.parentNode.replaceChild(noData, canvas);
+    }
+});
 </script>
 @endpush

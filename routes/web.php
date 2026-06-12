@@ -65,7 +65,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('reports')->name('reports.')->group(function () {
         Route::get('/', [ReportController::class, 'index'])->name('index');
         Route::get('/analytics', [ReportController::class, 'analytics'])->name('analytics');
-        Route::get('/export/pdf', [ReportController::class, 'exportPdf'])->name('export.pdf');
+        Route::get('/laporan/export-pdf', [ReportController::class, 'exportPdf'])->name('reports.export.pdf');
         Route::get('/export/excel', [ReportController::class, 'exportExcel'])->name('export.excel');
     });
 

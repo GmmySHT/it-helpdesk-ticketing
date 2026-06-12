@@ -22,7 +22,7 @@
     --tosca-light-bg: #f6f6fe;
 
     /* Glassmorph Variables */
-    --glass-bg: rgba(255, 255, 255, 0.08);
+    --glass-bg: rgba(255, 255, 255, 0.12);
     --glass-blur: blur(12px);
     --glass-border: rgba(255, 255, 255, 0.2);
     --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
@@ -34,7 +34,7 @@
 body {
     font-family: "Open Sans", sans-serif;
     /* ✅ Gunakan path relatif dari lokasi file CSS */
-    background: url("../../assets/img/dasboard.jpg") no-repeat center center fixed;
+    background: url("../../assets/img/bg12.png") no-repeat center center fixed;
     background-size: cover;
     min-height: 100vh;
     position: relative;
@@ -1524,7 +1524,7 @@ h1, h2, h3, h4, h5, h6 {
     border-radius: 15px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
-    background: white !important;
+    background: var( --glass-bg); ;
 }
 
 .stat-card:hover {
@@ -1588,3 +1588,5 @@ body.modal-open {
 .modal-backdrop.fade {
     transition: opacity 0.15s linear;
 }
+
+

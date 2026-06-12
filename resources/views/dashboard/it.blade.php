@@ -2,592 +2,556 @@
 
 @section('title', 'Dashboard Tim IT')
 
+@push('styles')
+<link rel="stylesheet" href="{{ asset('assets/css/admin-dashboard.css') }}">
+@endpush
+
 @section('content')
-<section class="section dashboard">
-  <div class="row">
+<div class="dash-wrapper">
 
-    <!-- KPI Cards -->
-    <div class="col-lg-3 col-6">
-      <div class="card info-card shadow-sm">
-        <div class="card-body">
-          <div class="d-flex justify-content-between align-items-start">
+    {{-- ── HEADER ── --}}
+    <div class="dash-header">
+        <div class="dash-header-inner">
             <div>
-              <h5 class="card-title text-muted mb-2">Antrian / Inbox</h5>
-              <h3 class="mb-0">{{ $inQueueCount ?? 0 }}</h3>
-              <small class="text-muted">
-                <i class="fas fa-clock me-1"></i>
-                Tiket belum di-assign
-              </small>
+                <h1 class="dash-header-title">
+                    <i class="fas fa-desktop"></i>
+                    Dashboard Tim IT
+                </h1>
+                <p class="dash-header-subtitle">Monitor dan kelola antrian ticket helpdesk</p>
             </div>
-            <div class="bg-info bg-opacity-10 rounded-circle p-3">
-              <i class="fas fa-inbox fa-2x text-info"></i>
+            <div class="dash-header-widgets">
+                <div class="dash-clock">
+                    <div class="dash-clock-time" id="dashClock">00:00:00</div>
+                    <div class="dash-clock-date" id="dashDate"></div>
+                </div>
             </div>
-          </div>
-          @if(($inQueueChange ?? null) && ($inQueueChange['value'] ?? 0) != 0)
-            <div class="mt-2">
-              @if($inQueueChange['trend'] == 'up')
-                <span class="text-danger"><i class="fas fa-arrow-up"></i> +{{ $inQueueChange['value'] }}%</span>
-              @elseif($inQueueChange['trend'] == 'down')
-                <span class="text-success"><i class="fas fa-arrow-down"></i> {{ $inQueueChange['value'] }}%</span>
-              @endif
-              <span class="text-muted small"> dari bulan lalu</span>
-            </div>
-          @endif
         </div>
-      </div>
     </div>
 
-    <div class="col-lg-3 col-6">
-      <div class="card info-card shadow-sm">
-        <div class="card-body">
-          <div class="d-flex justify-content-between align-items-start">
-            <div>
-              <h5 class="card-title text-muted mb-2">Tiket Aktif Saya</h5>
-              <h3 class="mb-0">{{ $myActiveTicketsCount ?? 0 }}</h3>
-              <small class="text-muted">
-                <i class="fas fa-spinner fa-spin me-1"></i>
-                Sedang dikerjakan
-              </small>
-            </div>
-            <div class="bg-warning bg-opacity-10 rounded-circle p-3">
-              <i class="fas fa-tasks fa-2x text-warning"></i>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+    {{-- ── STAT CARDS ── --}}
+    <div class="stat-grid">
 
-    <div class="col-lg-3 col-6">
-      <div class="card info-card shadow-sm">
-        <div class="card-body">
-          <div class="d-flex justify-content-between align-items-start">
-            <div>
-              <h5 class="card-title text-muted mb-2">Tiket Selesai</h5>
-              <h3 class="mb-0">{{ $myResolvedTicketsCount ?? 0 }}</h3>
-              <small class="text-muted">
-                <i class="fas fa-check-circle me-1 text-success"></i>
-                Total diselesaikan
-              </small>
+        <div class="stat-card">
+            <div class="stat-card-info">
+                <div class="stat-card-label">Antrian / Inbox</div>
+                <div class="stat-card-value" style="color:var(--accent-indigo)">{{ $inQueueCount ?? 0 }}</div>
+                <div class="stat-card-trend neutral">
+                    <i class="fas fa-clock me-1"></i>Tiket belum di-assign
+                </div>
+                @if(($inQueueChange['value'] ?? 0) != 0)
+                    <div class="stat-card-trend {{ ($inQueueChange['trend'] ?? '') == 'up' ? 'up-bad' : 'down-good' }} mt-1">
+                        <i class="fas fa-arrow-{{ ($inQueueChange['trend'] ?? '') == 'up' ? 'up' : 'down' }}"></i>
+                        {{ $inQueueChange['value'] ?? 0 }}% dari bulan lalu
+                    </div>
+                @endif
             </div>
-            <div class="bg-success bg-opacity-10 rounded-circle p-3">
-              <i class="fas fa-check-circle fa-2x text-success"></i>
+            <div class="stat-card-icon indigo">
+                <i class="fas fa-inbox"></i>
             </div>
-          </div>
         </div>
-      </div>
-    </div>
 
-    <div class="col-lg-3 col-6">
-      <div class="card info-card shadow-sm">
-        <div class="card-body">
-          <div class="d-flex justify-content-between align-items-start">
-            <div>
-              <h5 class="card-title text-muted mb-2">Rata-rata Penyelesaian</h5>
-              <h3 class="mb-0">
+        <div class="stat-card">
+            <div class="stat-card-info">
+                <div class="stat-card-label">Tiket Aktif Saya</div>
+                <div class="stat-card-value warn">{{ $myActiveTicketsCount ?? 0 }}</div>
+                <div class="stat-card-trend neutral">
+                    <i class="fas fa-spinner me-1"></i>Sedang dikerjakan
+                </div>
+            </div>
+            <div class="stat-card-icon amber">
+                <i class="fas fa-tasks"></i>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-card-info">
+                <div class="stat-card-label">Tiket Selesai</div>
+                <div class="stat-card-value" style="color:var(--accent-emerald)">{{ $myResolvedTicketsCount ?? 0 }}</div>
+                <div class="stat-card-trend up-good">
+                    <i class="fas fa-check-circle me-1"></i>Total diselesaikan
+                </div>
+            </div>
+            <div class="stat-card-icon emerald">
+                <i class="fas fa-check-circle"></i>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-card-info">
+                <div class="stat-card-label">Rata-rata Penyelesaian</div>
                 @php
-                    $avgHours = $avgResolutionHours ?? 0;
-                    $totalMinutes = round($avgHours * 60);
-                    if ($totalMinutes < 60) {
-                        $durationDisplay = $totalMinutes . ' menit';
+                    $avgHours    = $avgResolutionHours ?? 0;
+                    $totalMins   = round($avgHours * 60);
+                    if ($totalMins < 60) {
+                        $durDisplay = $totalMins . ' menit';
                     } else {
-                        $hours = floor($totalMinutes / 60);
-                        $minutes = $totalMinutes % 60;
-                        $durationDisplay = $hours . ' jam';
-                        if ($minutes > 0) {
-                            $durationDisplay .= ' ' . $minutes . ' menit';
-                        }
+                        $h = floor($totalMins / 60); $m = $totalMins % 60;
+                        $durDisplay = $h . ' jam' . ($m > 0 ? ' ' . $m . ' mnt' : '');
                     }
                 @endphp
-                {{ $durationDisplay }}
-              </h3>
-              <small class="text-muted">
-                <i class="fas fa-hourglass-half me-1"></i>
-                Per tiket
-              </small>
+                <div class="stat-card-value" style="font-size:1.4rem; color:var(--accent-primary)">{{ $durDisplay }}</div>
+                <div class="stat-card-trend neutral">
+                    <i class="fas fa-hourglass-half me-1"></i>Per tiket
+                </div>
             </div>
-            <div class="bg-primary bg-opacity-10 rounded-circle p-3">
-              <i class="fas fa-chart-line fa-2x text-primary"></i>
+            <div class="stat-card-icon primary">
+                <i class="fas fa-chart-line"></i>
             </div>
-          </div>
         </div>
-      </div>
+
     </div>
 
-    <!-- Charts Row -->
-    <div class="col-lg-8">
-      <div class="card shadow-sm">
-        <div class="card-header bg-white">
-          <h5 class="card-title mb-0">
-            <i class="fas fa-chart-line me-2 text-primary"></i>Trend Tiket Masuk (14 Hari Terakhir)
-          </h5>
+    {{-- ── CHARTS ROW ── --}}
+    <div class="charts-row">
+
+        {{-- Trend Line Chart --}}
+        <div class="glass-card">
+            <div class="glass-card-header">
+                <h5 class="glass-card-title">
+                    <i class="fas fa-chart-line"></i> Trend Tiket Masuk (14 Hari Terakhir)
+                </h5>
+            </div>
+            <div class="glass-card-body">
+                <div class="chart-wrap chart-wrap--tall">
+                    <canvas id="ticketsTrend"></canvas>
+                </div>
+            </div>
         </div>
-        <div class="card-body">
-          <canvas id="ticketsTrend" style="max-height:300px; width:100%"></canvas>
+
+        {{-- Tiket Per Bulan --}}
+        <div class="glass-card">
+            <div class="glass-card-header">
+                <h5 class="glass-card-title">
+                    <i class="fas fa-chart-bar"></i> Tiket Per Bulan
+                </h5>
+                <span style="font-size:.7rem; color:var(--text-muted);">6 bulan terakhir</span>
+            </div>
+            <div class="glass-card-body">
+                <div style="position:relative; height:200px;">
+                    <canvas id="monthlyTicketsChart"></canvas>
+                </div>
+            </div>
         </div>
-      </div>
+
+        {{-- Ringkasan Kinerja --}}
+        <div class="glass-card">
+            <div class="glass-card-header">
+                <h5 class="glass-card-title">
+                    <i class="fas fa-chart-pie"></i> Ringkasan Kinerja
+                </h5>
+            </div>
+            <div class="glass-card-body">
+
+                <div style="margin-bottom:1rem;">
+                    <div style="display:flex; justify-content:space-between; font-size:.8rem; margin-bottom:5px;">
+                        <span style="color:var(--text-muted)">Tiket Selesai Bulan Ini</span>
+                        <span style="font-weight:700; color:var(--accent-emerald)">{{ $resolvedThisMonth ?? 0 }}</span>
+                    </div>
+                    <div class="sla-progress-track">
+                        <div class="sla-progress-fill good" style="width:{{ min(100, ($resolvedThisMonth ?? 0) * 10) }}%"></div>
+                    </div>
+                </div>
+
+                <div style="margin-bottom:1rem;">
+                    <div style="display:flex; justify-content:space-between; font-size:.8rem; margin-bottom:5px;">
+                        <span style="color:var(--text-muted)">Tiket Dalam Proses</span>
+                        <span style="font-weight:700; color:var(--accent-amber)">{{ $inProgressCount ?? 0 }}</span>
+                    </div>
+                    <div class="sla-progress-track">
+                        <div class="sla-progress-fill medium" style="width:{{ min(100, ($inProgressCount ?? 0) * 10) }}%"></div>
+                    </div>
+                </div>
+
+                <div style="margin-bottom:1rem;">
+                    <div style="display:flex; justify-content:space-between; font-size:.8rem; margin-bottom:5px;">
+                        <span style="color:var(--text-muted)">Rata-rata Respon</span>
+                        <span style="font-weight:700; color:var(--accent-primary)">{{ $avgResponseTime ?? 'N/A' }}</span>
+                    </div>
+                    <div class="sla-progress-track">
+                        <div class="sla-progress-fill good" style="width:65%"></div>
+                    </div>
+                </div>
+
+                <div style="border-top:1px solid var(--border); padding-top:.75rem; text-align:center;">
+                    <span style="font-size:.72rem; color:var(--text-muted);">
+                        <i class="fas fa-sync-alt me-1"></i>
+                        Update: {{ now()->format('d M Y H:i') }}
+                    </span>
+                </div>
+            </div>
+        </div>
+
     </div>
 
-    <!-- Performance Summary -->
-    <div class="col-lg-4">
-      <div class="card shadow-sm">
-        <div class="card-header bg-white">
-          <h5 class="card-title mb-0">
-            <i class="fas fa-chart-pie me-2 text-primary"></i>Ringkasan Kinerja
-          </h5>
-        </div>
-        <div class="card-body">
-          <div class="mb-3">
-            <div class="d-flex justify-content-between mb-1">
-              <span>Tiket Selesai Bulan Ini</span>
-              <span class="fw-bold">{{ $resolvedThisMonth ?? 0 }}</span>
-            </div>
-            <div class="progress" style="height: 8px;">
-              <div class="progress-bar bg-success" style="width: {{ min(100, ($resolvedThisMonth ?? 0) * 10) }}%"></div>
-            </div>
-          </div>
-          <div class="mb-3">
-            <div class="d-flex justify-content-between mb-1">
-              <span>Tiket Dalam Proses</span>
-              <span class="fw-bold">{{ $inProgressCount ?? 0 }}</span>
-            </div>
-            <div class="progress" style="height: 8px;">
-              <div class="progress-bar bg-warning" style="width: {{ min(100, ($inProgressCount ?? 0) * 10) }}%"></div>
-            </div>
-          </div>
-          <div class="mb-3">
-            <div class="d-flex justify-content-between mb-1">
-              <span>Rata-rata Respon</span>
-              <span class="fw-bold">{{ $avgResponseTime ?? 'N/A' }}</span>
-            </div>
-            <div class="progress" style="height: 8px;">
-              <div class="progress-bar bg-info" style="width: 65%"></div>
-            </div>
-          </div>
-          <hr>
-          <div class="text-center">
-            <small class="text-muted">
-              <i class="fas fa-calendar-alt me-1"></i>
-              Update: {{ now()->format('d M Y H:i') }}
-            </small>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Inbox Table -->
-    <div class="col-lg-12 mt-3">
-      <div class="card shadow-sm">
-        <div class="card-header bg-white">
-          <div class="d-flex justify-content-between align-items-center">
-            <h5 class="card-title mb-0">
-              <i class="fas fa-inbox me-2 text-primary"></i>Antrian Ticket (Belum Di-assign)
+    {{-- ── ANTRIAN INBOX ── --}}
+    <div class="glass-card">
+        <div class="glass-card-header">
+            <h5 class="glass-card-title">
+                <i class="fas fa-inbox"></i> Antrian Ticket
+                <span class="badge-pill" style="background:#ede9fe;color:#4338ca;margin-left:6px;">{{ count($ticketsInbox ?? []) }}</span>
             </h5>
-            <a href="{{ route('tickets.index', ['filter'=>'inbox']) }}" class="btn btn-sm btn-outline-primary">
-              <i class="fas fa-arrow-right me-1"></i>Lihat Semua
+            <a href="{{ route('tickets.index', ['filter' => 'inbox']) }}" class="btn-glass">
+                <i class="fas fa-arrow-right me-1"></i>Lihat Semua
             </a>
-          </div>
         </div>
-        <div class="card-body">
-          <div class="table-responsive">
-            <table class="table table-hover align-middle">
-              <thead class="table-light">
-                <tr>
-                  <th>No</th>
-                  <th>Ticket</th>
-                  <th>Judul</th>
-                  <th>Prioritas</th>
-                  <th>Kategori</th>
-                  <th>Dibuat</th>
-                  <th>Aksi</th>
-                </tr>
-              </thead>
-              <tbody>
-                @forelse($ticketsInbox ?? [] as $t)
-                  <tr>
-                    <td>{{ $loop->iteration }}</td>
-                    <td>
-                      <a href="{{ route('tickets.show', $t) }}" class="fw-bold text-decoration-none">
-                        {{ $t->ticket_number }}
-                      </a>
-                    </td>
-                    <td>{{ \Illuminate\Support\Str::limit(strip_tags($t->title), 50) }}</td>
-                    <td>
-                      <span class="badge bg-{{ $t->getPriorityBadgeAttribute() }}">
-                        <i class="fas {{ $t->priority == 'low' ? 'fa-arrow-down' : ($t->priority == 'medium' ? 'fa-minus' : ($t->priority == 'high' ? 'fa-arrow-up' : 'fa-exclamation-triangle')) }} me-1"></i>
-                        {{ ucfirst($t->priority) }}
-                      </span>
-                    </td>
-                    <td>
-                      <span class="badge bg-secondary bg-opacity-10 text-secondary">
-                        <i class="fas fa-tag me-1"></i>{{ $t->category->name ?? 'Umum' }}
-                      </span>
-                    </td>
-                    <td>
-                      <small>{{ $t->created_at->format('d M Y H:i') }}</small><br>
-                      <small class="text-muted">{{ $t->created_at->diffForHumans() }}</small>
-                    </td>
-                    <td>
-                      <form action="{{ route('tickets.take', $t) }}" method="POST" class="d-inline">
-                        @csrf
-                        <button type="submit" class="btn btn-sm btn-primary" onclick="return confirm('Ambil ticket ini?')">
-                          <i class="fas fa-hand-paper me-1"></i>Take
-                        </button>
-                      </form>
-                    </td>
-                  </tr>
-                @empty
-                  <tr>
-                    <td colspan="7" class="text-center py-4">
-                      <i class="fas fa-inbox fa-3x text-muted mb-2"></i>
-                      <p class="text-muted mb-0">Tidak ada antrian ticket</p>
-                    </td>
-                  <tr>
-                @endforelse
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- My Tickets dengan Tabs -->
-    <div class="col-lg-12 mt-3">
-      <div class="card shadow-sm">
-        <div class="card-header bg-white">
-          <ul class="nav nav-tabs card-header-tabs" id="myTicketsTab" role="tablist">
-            <li class="nav-item" role="presentation">
-              <button class="nav-link active" id="active-tab" data-bs-toggle="tab" data-bs-target="#active" type="button" role="tab">
-                <i class="fas fa-tasks me-1"></i> Tiket Aktif
-                <span class="badge bg-primary ms-1">{{ $myActiveTicketsCount ?? 0 }}</span>
-              </button>
-            </li>
-            <li class="nav-item" role="presentation">
-              <button class="nav-link" id="resolved-tab" data-bs-toggle="tab" data-bs-target="#resolved" type="button" role="tab">
-                <i class="fas fa-check-circle me-1"></i> Tiket Selesai
-                <span class="badge bg-success ms-1">{{ $myResolvedTicketsCount ?? 0 }}</span>
-              </button>
-            </li>
-            <li class="nav-item" role="presentation">
-              <button class="nav-link" id="all-tab" data-bs-toggle="tab" data-bs-target="#all" type="button" role="tab">
-                <i class="fas fa-list me-1"></i> Semua Tiket Saya
-                <span class="badge bg-secondary ms-1">{{ $myAssignedCount ?? 0 }}</span>
-              </button>
-            </li>
-          </ul>
-        </div>
-        <div class="card-body">
-          <div class="tab-content" id="myTicketsTabContent">
-
-            <!-- Tab 1: Tiket Aktif -->
-            <div class="tab-pane fade show active" id="active" role="tabpanel">
-              <div class="table-responsive">
-                <table class="table table-hover align-middle">
-                  <thead class="table-light">
+        <div class="table-scroll">
+            <table class="glass-table">
+                <thead>
                     <tr>
-                      <th>No</th>
-                      <th>Ticket</th>
-                      <th>Judul</th>
-                      <th>Status</th>
-                      <th>Prioritas</th>
-                      <th>SLA Deadline</th>
-                      <th>Dibuat</th>
-                      <th>Aksi</th>
+                        <th>#</th>
+                        <th>Ticket</th>
+                        <th>Judul</th>
+                        <th>Prioritas</th>
+                        <th>Kategori</th>
+                        <th>Dibuat</th>
+                        <th style="text-align:center">Aksi</th>
                     </tr>
-                  </thead>
-                  <tbody>
-                    @forelse($myActiveTickets ?? [] as $t)
-                      @php
-                        $isOverdue = $t->sla_due_at && \Carbon\Carbon::now()->gt(\Carbon\Carbon::parse($t->sla_due_at));
-                      @endphp
-                      <tr @if($isOverdue) class="table-danger" @endif>
-                        <td>{{ $loop->iteration }}</td>
-                        <td>
-                          <a href="{{ route('tickets.show', $t) }}" class="fw-bold text-decoration-none">
-                            {{ $t->ticket_number }}
-                          </a>
-                        </td>
-                        <td>{{ \Illuminate\Support\Str::limit(strip_tags($t->title), 50) }}</td>
-                        <td>
-                          <span class="badge bg-{{ $t->getStatusBadgeAttribute() }}">
-                            <i class="fas {{ $t->status == 'open' ? 'fa-envelope' : ($t->status == 'in_progress' ? 'fa-cogs' : 'fa-check-circle') }} me-1"></i>
-                            {{ ucfirst(str_replace('_', ' ', $t->status)) }}
-                          </span>
-                        </td>
-                        <td>
-                          <span class="badge bg-{{ $t->getPriorityBadgeAttribute() }}">
-                            {{ ucfirst($t->priority) }}
-                          </span>
-                        </td>
-                        <td>
-                          @if($t->sla_due_at)
-                            <small class="{{ $isOverdue ? 'text-danger fw-bold' : 'text-muted' }}">
-                              <i class="fas fa-hourglass-half me-1"></i>
-                              {{ \Carbon\Carbon::parse($t->sla_due_at)->format('d M Y H:i') }}
-                            </small>
-                            @if($isOverdue)
-                              <span class="badge bg-danger ms-1">OVERDUE</span>
-                            @endif
-                          @else
-                            <span class="text-muted">-</span>
-                          @endif
-                        </td>
-                        <td>
-                          <small>{{ $t->created_at->format('d M Y') }}</small>
-                        </td>
-                        <td>
-                          <div class="btn-group btn-group-sm">
-                            <a href="{{ route('tickets.show', $t) }}" class="btn btn-outline-primary">
-                              <i class="fas fa-eye"></i> Detail
-                            </a>
-                            @if($t->status != 'resolved')
-                              <button type="button" class="btn btn-outline-success resolve-btn"
-                                      data-id="{{ $t->id }}"
-                                      data-number="{{ $t->ticket_number }}"
-                                      data-title="{{ addslashes(strip_tags($t->title)) }}">
-                                <i class="fas fa-check-circle"></i> Resolve
-                              </button>
-                            @endif
-                          </div>
-                        </td>
-                      </tr>
-                    @empty
-                      <tr>
-                        <td colspan="8" class="text-center py-4">
-                          <i class="fas fa-inbox fa-3x text-muted mb-2"></i>
-                          <p class="text-muted mb-0">Tidak ada tiket aktif yang sedang dikerjakan</p>
-                        </td>
-                      </tr>
-                    @endforelse
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            <!-- Tab 2: Tiket Selesai -->
-            <div class="tab-pane fade" id="resolved" role="tabpanel">
-              <div class="table-responsive">
-                <table class="table table-hover align-middle">
-                  <thead class="table-light">
+                </thead>
+                <tbody>
+                    @forelse($ticketsInbox ?? [] as $t)
+                    @php
+                        $pb = [
+                            'low'    => ['badge-priority-low',    'fas fa-arrow-down'],
+                            'medium' => ['badge-priority-medium', 'fas fa-minus'],
+                            'high'   => ['badge-priority-high',   'fas fa-arrow-up'],
+                            'urgent' => ['badge-priority-urgent', 'fas fa-exclamation-triangle'],
+                        ][$t->priority] ?? ['badge-priority-medium','fas fa-flag'];
+                    @endphp
                     <tr>
-                      <th>No</th>
-                      <th>Ticket</th>
-                      <th>Judul</th>
-                      <th>Status</th>
-                      <th>Diselesaikan</th>
-                      <th>Durasi</th>
-                      <th>Reopen</th>
-                      <th>Aksi</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    @forelse($myResolvedTickets ?? [] as $t)
-                      @php
-                        $diffMinutes = $t->created_at && $t->resolved_at ? $t->created_at->diffInMinutes($t->resolved_at) : 0;
-                        $durationHours = floor($diffMinutes / 60);
-                        $durationMinutes = $diffMinutes % 60;
-
-                        if ($durationHours > 0 && $durationMinutes > 0) {
-                            $durationDisplay = $durationHours . ' jam ' . $durationMinutes . ' menit';
-                        } elseif ($durationHours > 0) {
-                            $durationDisplay = $durationHours . ' jam';
-                        } elseif ($durationMinutes > 0) {
-                            $durationDisplay = $durationMinutes . ' menit';
-                        } else {
-                            $durationDisplay = '-';
-                        }
-                      @endphp
-                      <tr>
-                        <td>{{ $loop->iteration }}</td>
+                        <td style="font-weight:700;color:var(--accent-primary)">{{ $loop->iteration }}</td>
+                        <td><a href="{{ route('tickets.show', $t) }}" class="ticket-link">{{ $t->ticket_number }}</a></td>
+                        <td><span class="ticket-title-text">{{ \Illuminate\Support\Str::limit(strip_tags($t->title), 50) }}</span></td>
                         <td>
-                          <a href="{{ route('tickets.show', $t) }}" class="fw-bold text-decoration-none">
-                            {{ $t->ticket_number }}
-                          </a>
-                        </td>
-                        <td>{{ \Illuminate\Support\Str::limit(strip_tags($t->title), 50) }}</td>
-                        <td>
-                          <span class="badge bg-{{ $t->getStatusBadgeAttribute() }}">
-                            {{ ucfirst(str_replace('_', ' ', $t->status)) }}
-                          </span>
-                        </td>
-                        <td>
-                          @if($t->resolved_at)
-                            <small>{{ \Carbon\Carbon::parse($t->resolved_at)->format('d M Y H:i') }}</small>
-                          @else
-                            <span class="text-muted">-</span>
-                          @endif
-                        </td>
-                        <td>
-                          <span class="badge bg-info">{{ $durationDisplay }}</span>
-                        </td>
-                        <td>
-                          @if($t->reopen_count > 0)
-                            <span class="badge bg-warning" title="Dibuka kembali {{ $t->reopen_count }} kali">
-                              <i class="fas fa-undo-alt me-1"></i> {{ $t->reopen_count }}x
+                            <span class="badge-pill {{ $pb[0] }}">
+                                <i class="{{ $pb[1] }}" style="font-size:.65rem"></i>
+                                {{ ucfirst($t->priority) }}
                             </span>
-                          @else
-                            <span class="text-muted">-</span>
-                          @endif
                         </td>
                         <td>
-                          <a href="{{ route('tickets.show', $t) }}" class="btn btn-sm btn-outline-secondary">
-                            <i class="fas fa-eye"></i> Lihat
-                          </a>
+                            <span class="badge-pill" style="background:#f1f5f9;color:#475569;">
+                                <i class="fas fa-tag" style="font-size:.65rem"></i>
+                                {{ $t->category->name ?? 'Umum' }}
+                            </span>
                         </td>
-                      </tr>
-                    @empty
-                      <tr>
-                        <td colspan="8" class="text-center py-4">
-                          <i class="fas fa-check-circle fa-3x text-muted mb-2"></i>
-                          <p class="text-muted mb-0">Belum ada tiket yang diselesaikan</p>
+                        <td>
+                            <div class="text-small">{{ $t->created_at->format('d M Y H:i') }}</div>
+                            <div style="font-size:.7rem;color:var(--text-muted)">{{ $t->created_at->diffForHumans() }}</div>
                         </td>
-                      </tr>
-                    @endforelse
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            <!-- Tab 3: Semua Tiket Saya -->
-            <div class="tab-pane fade" id="all" role="tabpanel">
-              <div class="table-responsive">
-                <table class="table table-hover align-middle">
-                  <thead class="table-light">
-                    <tr>
-                      <th>No</th>
-                      <th>Ticket</th>
-                      <th>Judul</th>
-                      <th>Status</th>
-                      <th>Prioritas</th>
-                      <th>Dibuat</th>
-                      <th>Aksi</th>
+                        <td style="text-align:center">
+                            <form action="{{ route('tickets.take', $t) }}" method="POST" class="d-inline">
+                                @csrf
+                                <button type="submit"
+                                        class="btn-take"
+                                        onclick="return confirm('Ambil ticket ini?')">
+                                    <i class="fas fa-hand-paper me-1"></i>Take
+                                </button>
+                            </form>
+                        </td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    @forelse($ticketsMy ?? [] as $t)
-                      <tr>
-                        <td>{{ $loop->iteration }}</td>
-                        <td>
-                          <a href="{{ route('tickets.show', $t) }}" class="fw-bold text-decoration-none">
-                            {{ $t->ticket_number }}
-                          </a>
-                        </td>
-                        <td>{{ \Illuminate\Support\Str::limit(strip_tags($t->title), 50) }}</td>
-                        <td>
-                          <span class="badge bg-{{ $t->getStatusBadgeAttribute() }}">
-                            {{ ucfirst(str_replace('_', ' ', $t->status)) }}
-                          </span>
-                        </td>
-                        <td>
-                          <span class="badge bg-{{ $t->getPriorityBadgeAttribute() }}">
-                            {{ ucfirst($t->priority) }}
-                          </span>
-                        </td>
-                        <td>
-                          <small>{{ $t->created_at->format('d M Y') }}</small>
-                        </td>
-                        <td>
-                          <div class="btn-group btn-group-sm">
-                            <a href="{{ route('tickets.show', $t) }}" class="btn btn-outline-primary">
-                              <i class="fas fa-eye"></i> Detail
-                            </a>
-                            @if(!in_array($t->status, ['resolved', 'closed']))
-                              <button type="button" class="btn btn-outline-success resolve-btn"
-                                      data-id="{{ $t->id }}"
-                                      data-number="{{ $t->ticket_number }}"
-                                      data-title="{{ addslashes(strip_tags($t->title)) }}">
-                                <i class="fas fa-check-circle"></i> Resolve
-                              </button>
-                            @endif
-                          </div>
-                        </td>
-                      </tr>
                     @empty
-                      <tr>
-                        <td colspan="7" class="text-center py-4">
-                          <i class="fas fa-ticket-alt fa-3x text-muted mb-2"></i>
-                          <p class="text-muted mb-0">Belum ada tiket yang ditugaskan</p>
-                        </table>
-                      </tr>
+                    <tr>
+                        <td colspan="7">
+                            <div class="empty-state">
+                                <i class="fas fa-inbox"></i>
+                                <p>Tidak ada antrian ticket</p>
+                            </div>
+                        </td>
+                    </tr>
                     @endforelse
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-          </div>
+                </tbody>
+            </table>
         </div>
-      </div>
     </div>
 
-  </div>
-</section>
+    {{-- ── MY TICKETS TABS ── --}}
+    <div class="glass-card">
+        <div class="glass-card-header" style="padding-bottom:0; border-bottom:none;">
+            <div class="it-tabs" id="myTicketsTab">
+                <button class="it-tab active" data-target="#tab-active">
+                    <i class="fas fa-tasks me-1"></i>Tiket Aktif
+                    <span class="it-tab-badge">{{ $myActiveTicketsCount ?? 0 }}</span>
+                </button>
+                <button class="it-tab" data-target="#tab-resolved">
+                    <i class="fas fa-check-circle me-1"></i>Tiket Selesai
+                    <span class="it-tab-badge" style="background:#d1fae5;color:#065f46;">{{ $myResolvedTicketsCount ?? 0 }}</span>
+                </button>
+                <button class="it-tab" data-target="#tab-all">
+                    <i class="fas fa-list me-1"></i>Semua Tiket Saya
+                    <span class="it-tab-badge" style="background:#f1f5f9;color:#475569;">{{ $myAssignedCount ?? 0 }}</span>
+                </button>
+            </div>
+        </div>
 
-{{-- RESOLVE MODAL --}}
+        {{-- Tab: Tiket Aktif --}}
+        <div id="tab-active" class="it-tab-pane active">
+            <div class="table-scroll">
+                <table class="glass-table">
+                    <thead>
+                        <tr>
+                            <th>#</th><th>Ticket</th><th>Judul</th><th>Status</th>
+                            <th>Prioritas</th><th>SLA Deadline</th><th>Dibuat</th><th style="text-align:center">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($myActiveTickets ?? [] as $t)
+                        @php
+                            $isOverdue = $t->sla_due_at && \Carbon\Carbon::now()->gt(\Carbon\Carbon::parse($t->sla_due_at));
+                            $pb = [
+                                'low'    => 'badge-priority-low',
+                                'medium' => 'badge-priority-medium',
+                                'high'   => 'badge-priority-high',
+                                'urgent' => 'badge-priority-urgent',
+                            ][$t->priority] ?? 'badge-priority-medium';
+                            $sb = [
+                                'open'        => 'badge-status-open',
+                                'in_queue'    => 'badge-status-open',
+                                'in_progress' => 'badge-status-in_progress',
+                                'resolved'    => 'badge-status-resolved',
+                                'closed'      => 'badge-status-closed',
+                            ][$t->status] ?? 'badge-status-open';
+                        @endphp
+                        <tr @if($isOverdue) style="background:#fff5f5;" @endif>
+                            <td style="font-weight:700;color:var(--accent-primary)">{{ $loop->iteration }}</td>
+                            <td><a href="{{ route('tickets.show', $t) }}" class="ticket-link">{{ $t->ticket_number }}</a></td>
+                            <td><span class="ticket-title-text">{{ \Illuminate\Support\Str::limit(strip_tags($t->title), 45) }}</span></td>
+                            <td><span class="badge-pill {{ $sb }}">{{ ucfirst(str_replace('_', ' ', $t->status)) }}</span></td>
+                            <td><span class="badge-pill {{ $pb }}">{{ ucfirst($t->priority) }}</span></td>
+                            <td>
+                                @if($t->sla_due_at)
+                                    <span style="font-size:.75rem; color:{{ $isOverdue ? 'var(--accent-rose)' : 'var(--text-secondary)' }}; font-weight:{{ $isOverdue ? '700' : '400' }}">
+                                        <i class="fas fa-hourglass-half me-1"></i>
+                                        {{ \Carbon\Carbon::parse($t->sla_due_at)->format('d M Y H:i') }}
+                                    </span>
+                                    @if($isOverdue)
+                                        <span class="badge-pill badge-sla-overdue ms-1">OVERDUE</span>
+                                    @else
+                                        <span class="badge-pill badge-sla-ok ms-1">ON TIME</span>
+                                    @endif
+                                @else
+                                    <span style="color:var(--text-muted)">—</span>
+                                @endif
+                            </td>
+                            <td>
+                                <div class="text-small">{{ $t->created_at->format('d M Y') }}</div>
+                            </td>
+                            <td style="text-align:center">
+                                <div style="display:flex;gap:4px;justify-content:center;">
+                                    <a href="{{ route('tickets.show', $t) }}" class="btn-action" title="Detail">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    @if($t->status != 'resolved')
+                                        <button type="button"
+                                                class="btn-action btn-action--success resolve-btn"
+                                                title="Resolve"
+                                                data-id="{{ $t->id }}"
+                                                data-number="{{ $t->ticket_number }}"
+                                                data-title="{{ addslashes(strip_tags($t->title)) }}">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                    @endif
+                                </div>
+                            </td>
+                        </tr>
+                        @empty
+                        <tr><td colspan="8">
+                            <div class="empty-state">
+                                <i class="fas fa-inbox"></i>
+                                <p>Tidak ada tiket aktif yang sedang dikerjakan</p>
+                            </div>
+                        </td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        {{-- Tab: Tiket Selesai --}}
+        <div id="tab-resolved" class="it-tab-pane" style="display:none;">
+            <div class="table-scroll">
+                <table class="glass-table">
+                    <thead>
+                        <tr>
+                            <th>#</th><th>Ticket</th><th>Judul</th><th>Status</th>
+                            <th>Diselesaikan</th><th>Durasi</th><th>Reopen</th><th style="text-align:center">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($myResolvedTickets ?? [] as $t)
+                        @php
+                            $diffMins   = $t->created_at && $t->resolved_at ? $t->created_at->diffInMinutes($t->resolved_at) : 0;
+                            $dh = floor($diffMins / 60); $dm = $diffMins % 60;
+                            $durStr = $dh > 0 ? $dh.' jam'.($dm > 0 ? ' '.$dm.' mnt' : '') : ($dm > 0 ? $dm.' mnt' : '—');
+                        @endphp
+                        <tr>
+                            <td style="font-weight:700;color:var(--accent-primary)">{{ $loop->iteration }}</td>
+                            <td><a href="{{ route('tickets.show', $t) }}" class="ticket-link">{{ $t->ticket_number }}</a></td>
+                            <td><span class="ticket-title-text">{{ \Illuminate\Support\Str::limit(strip_tags($t->title), 45) }}</span></td>
+                            <td><span class="badge-pill badge-status-resolved">{{ ucfirst(str_replace('_', ' ', $t->status)) }}</span></td>
+                            <td>
+                                @if($t->resolved_at)
+                                    <div class="text-small">{{ \Carbon\Carbon::parse($t->resolved_at)->format('d M Y H:i') }}</div>
+                                @else
+                                    <span style="color:var(--text-muted)">—</span>
+                                @endif
+                            </td>
+                            <td>
+                                <span class="badge-pill" style="background:#dbeafe;color:#1e40af;">{{ $durStr }}</span>
+                            </td>
+                            <td>
+                                @if(($t->reopen_count ?? 0) > 0)
+                                    <span class="badge-pill badge-priority-medium">
+                                        <i class="fas fa-undo-alt" style="font-size:.65rem"></i> {{ $t->reopen_count }}x
+                                    </span>
+                                @else
+                                    <span style="color:var(--text-muted)">—</span>
+                                @endif
+                            </td>
+                            <td style="text-align:center">
+                                <a href="{{ route('tickets.show', $t) }}" class="btn-action" title="Lihat">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        @empty
+                        <tr><td colspan="8">
+                            <div class="empty-state">
+                                <i class="fas fa-check-circle"></i>
+                                <p>Belum ada tiket yang diselesaikan</p>
+                            </div>
+                        </td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        {{-- Tab: Semua Tiket --}}
+        <div id="tab-all" class="it-tab-pane" style="display:none;">
+            <div class="table-scroll">
+                <table class="glass-table">
+                    <thead>
+                        <tr>
+                            <th>#</th><th>Ticket</th><th>Judul</th><th>Status</th>
+                            <th>Prioritas</th><th>Dibuat</th><th style="text-align:center">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($ticketsMy ?? [] as $t)
+                        @php
+                            $pb = [
+                                'low'=>'badge-priority-low','medium'=>'badge-priority-medium',
+                                'high'=>'badge-priority-high','urgent'=>'badge-priority-urgent',
+                            ][$t->priority] ?? 'badge-priority-medium';
+                            $sb = [
+                                'open'=>'badge-status-open','in_queue'=>'badge-status-open',
+                                'in_progress'=>'badge-status-in_progress',
+                                'resolved'=>'badge-status-resolved','closed'=>'badge-status-closed',
+                            ][$t->status] ?? 'badge-status-open';
+                        @endphp
+                        <tr>
+                            <td style="font-weight:700;color:var(--accent-primary)">{{ $loop->iteration }}</td>
+                            <td><a href="{{ route('tickets.show', $t) }}" class="ticket-link">{{ $t->ticket_number }}</a></td>
+                            <td><span class="ticket-title-text">{{ \Illuminate\Support\Str::limit(strip_tags($t->title), 45) }}</span></td>
+                            <td><span class="badge-pill {{ $sb }}">{{ ucfirst(str_replace('_', ' ', $t->status)) }}</span></td>
+                            <td><span class="badge-pill {{ $pb }}">{{ ucfirst($t->priority) }}</span></td>
+                            <td><div class="text-small">{{ $t->created_at->format('d M Y') }}</div></td>
+                            <td style="text-align:center">
+                                <div style="display:flex;gap:4px;justify-content:center;">
+                                    <a href="{{ route('tickets.show', $t) }}" class="btn-action" title="Detail">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    @if(!in_array($t->status, ['resolved','closed']))
+                                        <button type="button"
+                                                class="btn-action btn-action--success resolve-btn"
+                                                title="Resolve"
+                                                data-id="{{ $t->id }}"
+                                                data-number="{{ $t->ticket_number }}"
+                                                data-title="{{ addslashes(strip_tags($t->title)) }}">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                    @endif
+                                </div>
+                            </td>
+                        </tr>
+                        @empty
+                        <tr><td colspan="7">
+                            <div class="empty-state">
+                                <i class="fas fa-ticket-alt"></i>
+                                <p>Belum ada tiket yang ditugaskan</p>
+                            </div>
+                        </td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>{{-- /glass-card tabs --}}
+
+</div>{{-- /dash-wrapper --}}
+
+
+{{-- ══ RESOLVE MODAL ══ --}}
 <div class="modal fade" id="resolveModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-lg">
     <form id="resolveForm" method="POST" action="" enctype="multipart/form-data">
       @csrf
-      <div class="modal-content border-0 shadow-lg">
-        <div class="modal-header bg-success text-white">
-          <h5 class="modal-title">
-            <i class="fas fa-check-circle me-2"></i>Selesaikan Ticket <span id="resolveTicketNumber" class="fw-bold"></span>
+      <div class="modal-content" style="border:none;border-radius:var(--radius-lg);overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.15);">
+        <div class="modal-header" style="background:linear-gradient(135deg,#059669,#0d9488);border:none;">
+          <h5 class="modal-title" style="color:#fff;font-weight:600;font-size:.95rem;">
+            <i class="fas fa-check-circle me-2"></i>
+            Selesaikan Ticket <span id="resolveTicketNumber" style="font-family:'Courier New',monospace;"></span>
           </h5>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
-        <div class="modal-body">
+        <div class="modal-body" style="padding:1.5rem;">
           <input type="hidden" name="status" value="resolved">
-          <input type="hidden" name="ticket_id" id="resolveTicketId" />
+          <input type="hidden" name="ticket_id" id="resolveTicketId">
 
-          <div class="alert alert-info">
+          <div style="background:#ecfdf5;border:1px solid #a7f3d0;border-radius:var(--radius-md);padding:.75rem 1rem;margin-bottom:1.25rem;font-size:.85rem;color:#065f46;">
             <i class="fas fa-info-circle me-2"></i>
             <strong>Ticket:</strong> <span id="resolveTicketTitle"></span>
           </div>
 
-          <div class="mb-3">
-            <label class="form-label fw-semibold text-success">
-                <i class="fas fa-sticky-note me-1"></i>Catatan Solusi <span class="text-danger">*</span>
+          <div style="margin-bottom:1.25rem;">
+            <label style="font-size:.82rem;font-weight:600;color:#059669;display:block;margin-bottom:6px;">
+              <i class="fas fa-sticky-note me-1"></i>Catatan Solusi <span style="color:var(--accent-rose)">*</span>
             </label>
-            <textarea name="resolution_notes"
-                      id="resolution_notes"
-                      class="form-control"
-                      rows="5"
-                      required
+            <textarea name="resolution_notes" id="resolution_notes" class="form-control" rows="5" required
                       placeholder="Jelaskan solusi yang diberikan untuk ticket ini..."></textarea>
-            <div class="form-text">
+            <div style="font-size:.72rem;color:var(--text-muted);margin-top:4px;">
               <i class="fas fa-info-circle me-1"></i>
-              Catatan ini akan dicatat sebagai history ticket dan akan terlihat oleh pembuat ticket.
+              Catatan ini akan terlihat oleh pembuat ticket sebagai history.
             </div>
           </div>
 
-          <div class="mb-3">
-            <label class="form-label fw-semibold text-success">
-                <i class="fas fa-paperclip me-1"></i>Lampiran Solusi (Opsional)
+          <div style="margin-bottom:1.25rem;">
+            <label style="font-size:.82rem;font-weight:600;color:#059669;display:block;margin-bottom:6px;">
+              <i class="fas fa-paperclip me-1"></i>Lampiran Solusi <span style="color:var(--text-muted);font-weight:400">(Opsional)</span>
             </label>
-            <input type="file"
-                   name="resolution_attachments[]"
-                   class="form-control"
-                   multiple
+            <input type="file" name="resolution_attachments[]" class="form-control" multiple
                    accept=".jpg,.jpeg,.png,.pdf,.doc,.docx,.xls,.xlsx,.txt">
-            <div class="form-text">
-              <i class="fas fa-info-circle me-1"></i>
-              Bisa upload multiple file. Maksimal 5MB per file.
+            <div style="font-size:.72rem;color:var(--text-muted);margin-top:4px;">
+              <i class="fas fa-info-circle me-1"></i>Multiple file. Maks 5MB per file.
             </div>
           </div>
 
-          <div class="form-check mb-3">
-            <input type="checkbox" class="form-check-input" name="notify_user" id="notifyUser" value="1" checked>
-            <label for="notifyUser" class="form-check-label">
-              <i class="fas fa-envelope me-1 text-success"></i>
-              Kirim notifikasi email ke pembuat ticket bahwa ticket telah selesai
+          <div style="display:flex;align-items:center;gap:8px;">
+            <input type="checkbox" name="notify_user" id="notifyUser" value="1" checked
+                   style="width:16px;height:16px;accent-color:var(--accent-emerald);">
+            <label for="notifyUser" style="font-size:.82rem;color:var(--text-secondary);cursor:pointer;margin:0;">
+              <i class="fas fa-envelope me-1" style="color:var(--accent-emerald)"></i>
+              Kirim notifikasi email ke pembuat ticket
             </label>
           </div>
         </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-              <i class="fas fa-times me-1"></i> Batal
+        <div class="modal-footer" style="border-top:1px solid var(--border);padding:.875rem 1.5rem;">
+          <button type="button" class="btn-glass" data-bs-dismiss="modal">
+            <i class="fas fa-times me-1"></i>Batal
           </button>
-          <button type="submit" class="btn btn-success" id="submitResolveBtn">
-              <i class="fas fa-check-circle me-1"></i> Selesaikan Ticket
+          <button type="submit" id="submitResolveBtn"
+                  style="display:inline-flex;align-items:center;gap:6px;padding:.55rem 1.25rem;border-radius:var(--radius-full);font-size:.82rem;font-weight:600;color:#fff;background:linear-gradient(135deg,#059669,#0d9488);border:none;cursor:pointer;">
+            <i class="fas fa-check-circle"></i> Selesaikan Ticket
           </button>
         </div>
       </div>
@@ -595,162 +559,246 @@
   </div>
 </div>
 
+
+{{-- ── Page-specific CSS ── --}}
+<style>
+    .dash-wrapper { min-height: unset; }
+
+    /* Chart wrap height */
+    .chart-wrap--tall { height: 240px; }
+
+    /* Take button */
+    .btn-take {
+        display: inline-flex; align-items: center; gap: 5px;
+        padding: 5px 14px;
+        border-radius: var(--radius-full);
+        font-size: .75rem; font-weight: 600;
+        color: #fff;
+        background: var(--accent-primary);
+        border: none; cursor: pointer;
+        transition: background .15s;
+    }
+    .btn-take:hover { background: var(--accent-secondary); }
+
+    /* Action buttons */
+    .btn-action {
+        width: 30px; height: 30px;
+        border-radius: 50%;
+        border: 1px solid var(--border);
+        background: var(--bg-surface);
+        display: inline-flex; align-items: center; justify-content: center;
+        font-size: .75rem; color: var(--accent-primary);
+        text-decoration: none; cursor: pointer;
+        transition: background .15s;
+    }
+    .btn-action:hover { background: #dbeafe; }
+    .btn-action--success { color: var(--accent-emerald); }
+    .btn-action--success:hover { background: #d1fae5; }
+
+    /* Header clock widget */
+    .btn-header {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: .55rem 1.1rem;
+        border-radius: var(--radius-full);
+        font-size: .78rem; font-weight: 600;
+        color: #fff;
+        background: rgba(255,255,255,.18);
+        border: 1px solid rgba(255,255,255,.28);
+        text-decoration: none;
+        transition: background .15s;
+    }
+
+    /* Custom tab system (menghindari Bootstrap tab conflict) */
+    .it-tabs {
+        display: flex;
+        gap: 2px;
+        padding: .875rem 1.25rem 0;
+        border-bottom: 1px solid var(--border);
+    }
+    .it-tab {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: .6rem 1rem;
+        font-size: .82rem; font-weight: 600;
+        color: var(--text-muted);
+        background: none; border: none;
+        border-bottom: 2px solid transparent;
+        cursor: pointer;
+        margin-bottom: -1px;
+        transition: color .15s, border-color .15s;
+    }
+    .it-tab:hover { color: var(--text-primary); }
+    .it-tab.active {
+        color: var(--accent-primary);
+        border-bottom-color: var(--accent-primary);
+    }
+    .it-tab-badge {
+        background: #ede9fe; color: var(--accent-indigo);
+        border-radius: var(--radius-full);
+        font-size: .65rem; font-weight: 700;
+        padding: 1px 7px;
+    }
+    .it-tab-pane { display: block; }
+
+    /* Overdue row */
+    .glass-table tbody tr[style*="background:#fff5f5"]:hover { background: #ffe8e8 !important; }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .main-grid { grid-template-columns: 1fr !important; }
+        .charts-row { grid-template-columns: 1fr !important; }
+        .it-tabs { overflow-x: auto; flex-wrap: nowrap; }
+    }
+</style>
 @endsection
 
-@push('styles')
-<style>
-  .nav-tabs .nav-link {
-    border-bottom: 2px solid transparent;
-    font-weight: 500;
-    transition: all 0.2s;
-  }
-  .nav-tabs .nav-link.active {
-    border-bottom-color: #0d6efd;
-    color: #0d6efd;
-  }
-  .nav-tabs .badge {
-    font-size: 0.65rem;
-    padding: 0.25em 0.5em;
-  }
-  .table-hover tbody tr:hover {
-    background-color: rgba(13, 110, 253, 0.05);
-    transition: background-color 0.2s;
-  }
-  .btn-group-sm .btn {
-    padding: 0.25rem 0.5rem;
-    font-size: 0.75rem;
-  }
-  .btn-group {
-    gap: 4px;
-  }
-  .info-card {
-    transition: transform 0.2s, box-shadow 0.2s;
-  }
-  .info-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-  }
-  .progress {
-    background-color: #e9ecef;
-    border-radius: 10px;
-  }
-  .progress-bar {
-    border-radius: 10px;
-    transition: width 0.5s ease;
-  }
-  .table-danger {
-    background-color: #fff5f5 !important;
-  }
-</style>
-@endpush
 
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-  // Chart Trend
-  const labels = {!! json_encode($days ?? []) !!};
-  const chartData = {!! json_encode($counts ?? []) !!};
+document.addEventListener('DOMContentLoaded', function () {
 
-  if (labels.length && chartData.length) {
-    const ctx = document.getElementById('ticketsTrend').getContext('2d');
-    new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: labels,
-        datasets: [{
-          label: 'Jumlah tiket per hari',
-          data: chartData,
-          fill: true,
-          tension: 0.3,
-          backgroundColor: 'rgba(13, 110, 253, 0.1)',
-          borderColor: '#0d6efd',
-          borderWidth: 2,
-          pointBackgroundColor: '#0d6efd',
-          pointBorderColor: '#fff',
-          pointRadius: 4,
-          pointHoverRadius: 6
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: true,
-        plugins: {
-          legend: {
-            display: false
-          },
-          tooltip: {
-            callbacks: {
-              label: function(context) {
-                return `Tiket: ${context.raw}`;
-              }
-            }
-          }
-        },
-        scales: {
-          y: {
-            beginAtZero: true,
-            ticks: {
-              stepSize: 1,
-              precision: 0
+    // ── Clock ──────────────────────────────────────────────────────
+    function updateClock() {
+        const now  = new Date();
+        const time = now.toLocaleTimeString('id-ID', { hour12: false });
+        const date = now.toLocaleDateString('id-ID', { weekday:'short', day:'numeric', month:'short', year:'numeric' });
+        const el = document.getElementById('dashClock');
+        const de = document.getElementById('dashDate');
+        if (el) el.textContent = time;
+        if (de) de.textContent = date;
+    }
+    updateClock();
+    setInterval(updateClock, 1000);
+
+    // ── Trend Chart ────────────────────────────────────────────────
+    const labels    = {!! json_encode($days ?? []) !!};
+    const chartData = {!! json_encode($counts ?? []) !!};
+    const canvas    = document.getElementById('ticketsTrend');
+
+    if (canvas && labels.length && chartData.length) {
+        new Chart(canvas.getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Tiket per hari',
+                    data: chartData,
+                    fill: true,
+                    tension: 0.35,
+                    backgroundColor: 'rgba(29,111,184,0.08)',
+                    borderColor: '#1d6fb8',
+                    borderWidth: 2,
+                    pointBackgroundColor: '#1d6fb8',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                }]
             },
-            title: {
-              display: true,
-              text: 'Jumlah Tiket'
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: { label: ctx => `Tiket: ${ctx.raw}` }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { stepSize: 1, precision: 0, font: { size: 10 }, color: '#94a3b8' },
+                        grid: { color: 'rgba(0,0,0,0.04)' },
+                        border: { display: false }
+                    },
+                    x: {
+                        ticks: { font: { size: 10 }, color: '#94a3b8' },
+                        grid: { display: false },
+                        border: { display: false }
+                    }
+                }
             }
-          },
-          x: {
-            title: {
-              display: true,
-              text: 'Tanggal'
+        });
+    }
+
+    // ── Custom Tab Logic ───────────────────────────────────────────
+    document.querySelectorAll('.it-tab').forEach(function (tab) {
+        tab.addEventListener('click', function () {
+            document.querySelectorAll('.it-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.it-tab-pane').forEach(p => p.style.display = 'none');
+            this.classList.add('active');
+            const pane = document.querySelector(this.dataset.target);
+            if (pane) pane.style.display = 'block';
+        });
+    });
+
+    // ── Monthly Chart ──────────────────────────────────────────────
+    const monthLabels = {!! json_encode($months ?? []) !!};
+    const monthCounts = {!! json_encode($ticketCountsByMonth ?? []) !!};
+    const monthCanvas = document.getElementById('monthlyTicketsChart');
+
+    if (monthCanvas && monthLabels.length && monthCounts.length) {
+        new Chart(monthCanvas.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: monthLabels,
+                datasets: [{
+                    label: 'Jumlah Tiket',
+                    data: monthCounts,
+                    backgroundColor: 'rgba(13,148,136,0.15)',
+                    borderColor: '#0d9488',
+                    borderWidth: 1.5,
+                    borderRadius: 6,
+                    barPercentage: 0.65,
+                    categoryPercentage: 0.75,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { callbacks: { label: ctx => `${ctx.raw} tiket` } }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { stepSize: 1, precision: 0, font: { size: 10 }, color: '#94a3b8' },
+                        grid: { color: 'rgba(0,0,0,0.04)' },
+                        border: { display: false }
+                    },
+                    x: {
+                        ticks: { font: { size: 10 }, color: '#94a3b8' },
+                        grid: { display: false },
+                        border: { display: false }
+                    }
+                }
             }
-          }
-        }
-      }
+        });
+    } else if (monthCanvas) {
+        const noData = document.createElement('div');
+        noData.style.cssText = 'text-align:center;padding:2rem;color:#94a3b8;font-size:.8rem;';
+        noData.innerHTML = '<i class="fas fa-chart-bar" style="font-size:1.5rem;display:block;margin-bottom:.5rem;opacity:.4;"></i>Tidak ada data chart';
+        monthCanvas.parentNode.replaceChild(noData, monthCanvas);
+    }
+
+    // ── Resolve Modal ──────────────────────────────────────────────
+    document.querySelectorAll('.resolve-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            const id     = this.dataset.id;
+            const number = this.dataset.number;
+            const title  = this.dataset.title;
+
+            document.getElementById('resolveTicketId').value       = id;
+            document.getElementById('resolveTicketNumber').textContent = number;
+            document.getElementById('resolveTicketTitle').textContent  = title;
+            document.getElementById('resolveForm').action              = '/it/tickets/' + id + '/status';
+            document.getElementById('resolution_notes').value          = '';
+
+            new bootstrap.Modal(document.getElementById('resolveModal')).show();
+        });
     });
-  }
 
-  // Initialize tabs
-  document.addEventListener('DOMContentLoaded', function() {
-    var triggerTabList = [].slice.call(document.querySelectorAll('#myTicketsTab button'));
-    triggerTabList.forEach(function (triggerEl) {
-      var tabTrigger = new bootstrap.Tab(triggerEl);
-      triggerEl.addEventListener('click', function (event) {
-        event.preventDefault();
-        tabTrigger.show();
-      });
-    });
-  });
-
-  // ==================== RESOLVE MODAL FUNCTION ====================
-  document.addEventListener('DOMContentLoaded', function() {
-    const resolveButtons = document.querySelectorAll('.resolve-btn');
-
-    resolveButtons.forEach(function(button) {
-      button.addEventListener('click', function(e) {
-        e.preventDefault();
-
-        const ticketId = this.getAttribute('data-id');
-        const ticketNumber = this.getAttribute('data-number');
-        const ticketTitle = this.getAttribute('data-title');
-
-        console.log('Resolve button clicked:', ticketId, ticketNumber);
-
-        document.getElementById('resolveTicketId').value = ticketId;
-        document.getElementById('resolveTicketNumber').textContent = ticketNumber;
-        document.getElementById('resolveTicketTitle').textContent = ticketTitle;
-
-        const resolveForm = document.getElementById('resolveForm');
-        if (resolveForm) {
-          resolveForm.action = '/it/tickets/' + ticketId + '/status';
-          console.log('Form action set to:', resolveForm.action);
-        }
-
-        document.getElementById('resolution_notes').value = '';
-
-        const resolveModal = new bootstrap.Modal(document.getElementById('resolveModal'));
-        resolveModal.show();
-      });
-    });
-  });
+});
 </script>
 @endpush

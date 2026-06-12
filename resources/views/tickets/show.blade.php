@@ -2,475 +2,465 @@
 
 @section('title', 'Ticket #' . $ticket->ticket_number)
 
+@push('styles')
+    <link rel="stylesheet" href="{{ asset('assets/css/ticket-show.css') }}">
+@endpush
+
+@php
+    /* Pre-compute values once ─ avoid repeating logic in the view */
+    $isOverdue = $ticket->sla_due_at
+        && \Carbon\Carbon::now()->gt(\Carbon\Carbon::parse($ticket->sla_due_at))
+        && !in_array($ticket->status, ['resolved','closed']);
+
+    $slaUsedPct = 0;
+    if ($ticket->sla_due_at && $ticket->created_at) {
+        $total   = $ticket->created_at->diffInMinutes(\Carbon\Carbon::parse($ticket->sla_due_at));
+        $elapsed = $ticket->created_at->diffInMinutes(now());
+        $slaUsedPct = $total > 0 ? min(round($elapsed / $total * 100), 100) : 0;
+    }
+
+    $priorityDotMap = [
+        'low'    => 'fa-arrow-down',
+        'medium' => 'fa-minus',
+        'high'   => 'fa-arrow-up',
+        'urgent' => 'fa-exclamation-triangle',
+    ];
+    $statusIconMap = [
+        'open'        => 'fa-envelope',
+        'in_queue'    => 'fa-layer-group',
+        'in_progress' => 'fa-cogs',
+        'resolved'    => 'fa-check-circle',
+        'closed'      => 'fa-archive',
+    ];
+    $actionDotMap = [
+        'created'        => ['dot' => 'blue',   'icon' => 'fas fa-plus',         'tag' => 'created'],
+        'updated'        => ['dot' => 'gray',    'icon' => 'fas fa-edit',         'tag' => 'updated'],
+        'assigned'       => ['dot' => 'amber',   'icon' => 'fas fa-user-plus',    'tag' => 'assigned'],
+        'taken'          => ['dot' => 'green',   'icon' => 'fas fa-hand-paper',   'tag' => 'taken'],
+        'status_changed' => ['dot' => 'purple',  'icon' => 'fas fa-sync-alt',     'tag' => 'status_changed'],
+        'resolved'       => ['dot' => 'green',   'icon' => 'fas fa-check-circle', 'tag' => 'resolved'],
+        'reopened'       => ['dot' => 'red',     'icon' => 'fas fa-undo-alt',     'tag' => 'reopened'],
+    ];
+
+    $backRoute = auth()->user()->role === 'admin'
+        ? route('tickets.index')
+        : (request()->routeIs('it.tickets.show') ? route('it.tickets.my') : route('tickets.index'));
+
+    $statusRoute = auth()->user()->role === 'admin'
+        ? route('tickets.status', $ticket)
+        : route('it.tickets.status', $ticket);
+
+    $reopenRoute = auth()->user()->role === 'admin'
+        ? route('tickets.reopen', $ticket)
+        : route('it.tickets.reopen', $ticket);
+
+    $histories = $ticket->histories()->with('user')->latest()->get();
+
+    $attachments = null;
+    if ($ticket->resolution_attachments) {
+        $attachments = is_string($ticket->resolution_attachments)
+            ? json_decode($ticket->resolution_attachments, true)
+            : $ticket->resolution_attachments;
+    }
+@endphp
+
 @section('content')
-<div class="container-fluid px-4">
-    <!-- Page Header dengan Container Biru -->
-    <div class="page-header-wrapper mb-4">
-        <div class="page-header-blue">
-            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
-                <div>
-                    <div class="d-flex align-items-center gap-3 mb-2">
-                        <h1 class="page-title mb-0">
-                            <i class="fas fa-ticket-alt me-2"></i>
-                            Ticket #{{ $ticket->ticket_number }}
-                        </h1>
-                        <div>
-                            <span class="badge bg-{{ $ticket->getPriorityBadgeAttribute() }} px-3 py-2">
-                                <i class="fas {{ $ticket->priority == 'low' ? 'fa-arrow-down' : ($ticket->priority == 'medium' ? 'fa-minus' : ($ticket->priority == 'high' ? 'fa-arrow-up' : 'fa-exclamation-triangle')) }} me-1"></i>
-                                {{ ucfirst($ticket->priority) }}
-                            </span>
-                            <span class="badge bg-{{ $ticket->getStatusBadgeAttribute() }} px-3 py-2 ms-2">
-                                <i class="fas {{ $ticket->status == 'open' ? 'fa-envelope' : ($ticket->status == 'in_progress' ? 'fa-cogs' : ($ticket->status == 'resolved' ? 'fa-check-circle' : 'fa-archive')) }} me-1"></i>
-                                {{ ucfirst(str_replace('_', ' ', $ticket->status)) }}
-                            </span>
-                            @if($ticket->reopen_count > 0)
-                            <span class="badge bg-warning px-3 py-2 ms-2" title="Dibuka kembali {{ $ticket->reopen_count }} kali">
-                                <i class="fas fa-undo-alt me-1"></i>
-                                Reopen x{{ $ticket->reopen_count }}
-                            </span>
-                            @endif
-                        </div>
-                    </div>
-                    <p class="page-subtitle mb-0">{{ strip_tags($ticket->title) }}</p>
+<div class="ts-page container-fluid px-4">
+
+    {{-- ═══════════════ HEADER ═══════════════ --}}
+    <header class="ts-header">
+        <div class="ts-header-inner">
+            <div>
+                <h1 class="ts-header-title">
+                    <i class="fas fa-ticket-alt" aria-hidden="true"></i>
+                    Ticket #{{ $ticket->ticket_number }}
+                </h1>
+                <div class="ts-header-badges">
+                    <span class="ts-badge ts-badge-white">
+                        <i class="fas {{ $priorityDotMap[$ticket->priority] ?? 'fa-minus' }}" aria-hidden="true"></i>
+                        {{ ucfirst($ticket->priority) }}
+                    </span>
+                    <span class="ts-badge ts-badge-white">
+                        <i class="fas {{ $statusIconMap[$ticket->status] ?? 'fa-circle' }}" aria-hidden="true"></i>
+                        {{ ucfirst(str_replace('_', ' ', $ticket->status)) }}
+                    </span>
+                    @if($ticket->reopen_count > 0)
+                    <span class="ts-badge ts-badge-white" title="Dibuka kembali {{ $ticket->reopen_count }} kali">
+                        <i class="fas fa-undo-alt" aria-hidden="true"></i>
+                        Reopen ×{{ $ticket->reopen_count }}
+                    </span>
+                    @endif
                 </div>
-                <div>
-                    @php
-                        $backRoute = auth()->user()->role === 'admin'
-                            ? route('tickets.index')
-                            : (request()->routeIs('it.tickets.show') ? route('it.tickets.my') : route('tickets.index'));
-                    @endphp
-                    <a href="{{ $backRoute }}" class="btn btn-light">
-                        <i class="fas fa-arrow-left me-2"></i>Kembali ke Daftar
-                    </a>
-                </div>
+                <p class="ts-header-sub">{{ strip_tags($ticket->title) }}</p>
             </div>
+            <a href="{{ $backRoute }}" class="ts-btn-back">
+                <i class="fas fa-arrow-left" aria-hidden="true"></i>Kembali ke Daftar
+            </a>
         </div>
-    </div>
+    </header>
 
-    <div class="row g-4">
-        <!-- Left Column: Main Content -->
-        <div class="col-lg-8">
-            <!-- Ticket Description Card -->
-            <div class="card mb-4">
-                <div class="card-header">
-                    <div class="d-flex align-items-center">
-                        <div class="avatar-lg bg-primary bg-opacity-10 rounded-circle me-3">
-                            <i class="fas fa-file-alt text-primary"></i>
-                        </div>
+    {{-- ═══════════════ MAIN GRID ═══════════════ --}}
+    <div class="ts-grid">
+
+        {{-- ─── LEFT COLUMN ─── --}}
+        <div>
+
+            {{-- Description --}}
+            <div class="ts-card">
+                <div class="ts-card-head">
+                    <div class="ts-card-head-left">
+                        <div class="ts-card-icon blue" aria-hidden="true"><i class="fas fa-file-alt"></i></div>
                         <div>
-                            <h5 class="card-title mb-0">Deskripsi Ticket</h5>
-                            <small class="text-muted">
-                                <i class="fas fa-user me-1"></i>
-                                Dibuat oleh: {{ $ticket->user->name }}
-                                <i class="fas fa-calendar-alt ms-2 me-1"></i>
-                                {{ $ticket->created_at->format('d M Y, H:i') }}
-                            </small>
+                            <h2 class="ts-card-title">Deskripsi ticket</h2>
+                            <div class="ts-card-sub">
+                                <i class="fas fa-user" aria-hidden="true"></i>
+                                {{ $ticket->user->name }}
+                                &nbsp;·&nbsp;
+                                <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                                {{ $ticket->created_at->translatedFormat('d M Y, H:i') }}
+                            </div>
                         </div>
                     </div>
                 </div>
-                <div class="card-body">
-                    <div class="ticket-description p-3 bg-light rounded">
-                        {!! $ticket->description !!}
-                    </div>
+                <div class="ts-card-body">
+                    <div class="ts-desc-box">{!! $ticket->description !!}</div>
                 </div>
             </div>
 
-            <!-- Resolution Section (jika ticket resolved) -->
+            {{-- Resolution (only when resolved + has notes) --}}
             @if($ticket->status === 'resolved' && $ticket->resolution_notes)
-            <div class="card mb-4 border-success">
-                <div class="card-header bg-success bg-opacity-10 border-success">
-                    <div class="d-flex align-items-center">
-                        <div class="avatar-lg bg-success bg-opacity-20 rounded-circle me-3">
-                            <i class="fas fa-check text-white"></i>
-                        </div>
-                        <div class="flex-grow-1">
-                            <h5 class="card-title mb-0 text-success">Solusi Penyelesaian</h5>
-                            <small class="text-muted">
-                                <i class="fas fa-user-check me-1"></i>
-                                Diselesaikan oleh: {{ $ticket->resolvedBy->name ?? $ticket->assignedTo->name ?? 'System' }}
-                                <i class="fas fa-calendar-alt ms-2 me-1"></i>
-                                {{ $ticket->resolved_at ? \Carbon\Carbon::parse($ticket->resolved_at)->format('d M Y, H:i') : '-' }}
-                            </small>
+            <div class="ts-card ts-card-resolve">
+                <div class="ts-resolve-head">
+                    <div class="ts-resolve-icon" aria-hidden="true"><i class="fas fa-check"></i></div>
+                    <div>
+                        <h2 class="ts-resolve-title">Solusi penyelesaian</h2>
+                        <div class="ts-resolve-sub">
+                            <i class="fas fa-user-check" aria-hidden="true"></i>
+                            Diselesaikan oleh: {{ $ticket->resolvedBy->name ?? $ticket->assignedTo->name ?? 'System' }}
+                            &nbsp;·&nbsp;
+                            <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                            {{ $ticket->resolved_at ? \Carbon\Carbon::parse($ticket->resolved_at)->translatedFormat('d M Y, H:i') : '-' }}
                         </div>
                     </div>
                 </div>
-                <div class="card-body">
-                    <div class="resolution-notes p-3 bg-light rounded">
-                        {!! $ticket->resolution_notes !!}
-                    </div>
+                <div class="ts-card-body">
+                    <div class="ts-resolve-box">{!! $ticket->resolution_notes !!}</div>
 
-                    <!-- Lampiran Bukti -->
-                    @if($ticket->resolution_attachments)
-                        @php
-                            $attachments = is_string($ticket->resolution_attachments)
-                                ? json_decode($ticket->resolution_attachments, true)
-                                : $ticket->resolution_attachments;
-                        @endphp
-                        @if(is_array($attachments) && count($attachments) > 0)
-                            <hr>
-                            <h6 class="mt-3">
-                                <i class="fas fa-paperclip me-2 text-primary"></i>Lampiran Bukti
-                            </h6>
-                            <div class="row g-3 mt-1">
-                                @foreach($attachments as $attachment)
-                                <div class="col-md-4 col-sm-6">
-                                    <a href="{{ Storage::url($attachment['path']) }}" target="_blank" class="text-decoration-none">
-                                        <div class="card attachment-card h-100">
-                                            <div class="card-body text-center py-3">
-                                                @if(str_contains($attachment['mime'], 'image'))
-                                                    <i class="fas fa-image fa-3x text-primary mb-2"></i>
-                                                @elseif(str_contains($attachment['mime'], 'pdf'))
-                                                    <i class="fas fa-file-pdf fa-3x text-danger mb-2"></i>
-                                                @elseif(str_contains($attachment['mime'], 'word'))
-                                                    <i class="fas fa-file-word fa-3x text-info mb-2"></i>
-                                                @elseif(str_contains($attachment['mime'], 'excel'))
-                                                    <i class="fas fa-file-excel fa-3x text-success mb-2"></i>
-                                                @else
-                                                    <i class="fas fa-file fa-3x text-secondary mb-2"></i>
-                                                @endif
-                                                <p class="mb-0 text-truncate small fw-semibold">{{ $attachment['name'] }}</p>
-                                                <small class="text-muted">{{ round($attachment['size'] / 1024, 2) }} KB</small>
-                                            </div>
-                                        </div>
-                                    </a>
-                                </div>
-                                @endforeach
-                            </div>
-                        @endif
+                    @if(is_array($attachments) && count($attachments) > 0)
+                    <hr style="border:none;border-top:1px solid #bbf7d0;margin:1rem 0">
+                    <div class="ts-attach-title">
+                        <i class="fas fa-paperclip" aria-hidden="true"></i>Lampiran bukti
+                    </div>
+                    <div class="ts-attach-grid">
+                        @foreach($attachments as $att)
+                        <a href="{{ Storage::url($att['path']) }}" target="_blank" class="ts-attach-card">
+                            @if(str_contains($att['mime'], 'image'))
+                                <i class="fas fa-image" style="color:#1d6fb8" aria-hidden="true"></i>
+                            @elseif(str_contains($att['mime'], 'pdf'))
+                                <i class="fas fa-file-pdf" style="color:#e11d48" aria-hidden="true"></i>
+                            @elseif(str_contains($att['mime'], 'word'))
+                                <i class="fas fa-file-word" style="color:#2563eb" aria-hidden="true"></i>
+                            @elseif(str_contains($att['mime'], 'excel') || str_contains($att['mime'], 'spreadsheet'))
+                                <i class="fas fa-file-excel" style="color:#059669" aria-hidden="true"></i>
+                            @else
+                                <i class="fas fa-file" style="color:#6b7280" aria-hidden="true"></i>
+                            @endif
+                            <div class="ts-attach-name" title="{{ $att['name'] }}">{{ $att['name'] }}</div>
+                            <div class="ts-attach-size">{{ round($att['size'] / 1024, 1) }} KB</div>
+                        </a>
+                        @endforeach
+                    </div>
                     @endif
                 </div>
             </div>
             @endif
-        </div>
 
-        <!-- Right Column: Sidebar -->
-        <div class="col-lg-4">
-            <!-- Info Card -->
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-info-circle me-2 text-primary"></i>Informasi Ticket
-                    </h5>
+        </div>{{-- /left column --}}
+
+        {{-- ─── RIGHT COLUMN (SIDEBAR) ─── --}}
+        <div>
+
+            {{-- Info Card --}}
+            <div class="ts-card">
+                <div class="ts-card-head">
+                    <div class="ts-card-head-left">
+                        <h2 class="ts-card-title" style="display:flex;align-items:center;gap:7px">
+                            <i class="fas fa-info-circle" style="color:#1d6fb8" aria-hidden="true"></i>
+                            Informasi ticket
+                        </h2>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <div class="info-list">
-                        <div class="info-item">
-                            <div class="info-label">
-                                <i class="fas fa-tag me-2 text-muted"></i>Kategori
-                            </div>
-                            <div class="info-value">
-                                <span class="badge" style="background-color: {{ $ticket->category->color ?? '#6c757d' }}">
+                <div class="ts-card-body">
+                    <div class="ts-info-list">
+
+                        <div class="ts-info-row">
+                            <div class="ts-info-lbl"><i class="fas fa-tag" aria-hidden="true"></i>Kategori</div>
+                            <div class="ts-info-val">
+                                <span class="ts-badge" style="background:{{ $ticket->category->color ?? '#ede9fe' }};color:{{ $ticket->category->color ? '#fff' : '#4338ca' }}">
                                     {{ $ticket->category->name ?? '-' }}
                                 </span>
                             </div>
                         </div>
-                        <div class="info-item">
-                            <div class="info-label">
-                                <i class="fas fa-barcode me-2 text-muted"></i>Ticket Number
-                            </div>
-                            <div class="info-value fw-bold">{{ $ticket->ticket_number }}</div>
+
+                        <div class="ts-info-row">
+                            <div class="ts-info-lbl"><i class="fas fa-barcode" aria-hidden="true"></i>Nomor ticket</div>
+                            <div class="ts-info-val bold">{{ $ticket->ticket_number }}</div>
                         </div>
-                        <div class="info-item">
-                            <div class="info-label">
-                                <i class="fas fa-calendar-plus me-2 text-muted"></i>Tanggal Dibuat
-                            </div>
-                            <div class="info-value">{{ $ticket->created_at->format('d M Y, H:i') }}</div>
+
+                        <div class="ts-info-row">
+                            <div class="ts-info-lbl"><i class="fas fa-calendar-plus" aria-hidden="true"></i>Tanggal dibuat</div>
+                            <div class="ts-info-val">{{ $ticket->created_at->translatedFormat('d M Y, H:i') }}</div>
                         </div>
-                        <div class="info-item">
-                            <div class="info-label">
-                                <i class="fas fa-calendar-check me-2 text-muted"></i>Terakhir Update
-                            </div>
-                            <div class="info-value">{{ $ticket->updated_at->diffForHumans() }}</div>
+
+                        <div class="ts-info-row">
+                            <div class="ts-info-lbl"><i class="fas fa-calendar-check" aria-hidden="true"></i>Terakhir update</div>
+                            <div class="ts-info-val">{{ $ticket->updated_at->diffForHumans() }}</div>
                         </div>
-                        <div class="info-item">
-                            <div class="info-label">
-                                <i class="fas fa-user-check me-2 text-muted"></i>Ditugaskan Ke
-                            </div>
-                            <div class="info-value">
+
+                        <div class="ts-info-row">
+                            <div class="ts-info-lbl"><i class="fas fa-user-check" aria-hidden="true"></i>Ditugaskan ke</div>
+                            <div class="ts-info-val">
                                 @if($ticket->assignedTo)
-                                    <div class="d-flex align-items-center">
-                                        <div class="avatar-sm bg-primary me-2">
-                                            {{ strtoupper(substr($ticket->assignedTo->name, 0, 1)) }}
+                                    <div class="ts-avatar-row">
+                                        <div class="ts-avatar" aria-hidden="true">
+                                            {{ strtoupper(substr($ticket->assignedTo->name, 0, 2)) }}
                                         </div>
                                         <span>{{ $ticket->assignedTo->name }}</span>
                                     </div>
                                 @else
-                                    <span class="text-muted">
-                                        <i class="fas fa-user-slash me-1"></i>Belum ditugaskan
+                                    <span class="ts-info-val muted">
+                                        <i class="fas fa-user-slash" aria-hidden="true"></i> Belum ditugaskan
                                     </span>
                                 @endif
                             </div>
                         </div>
+
                         @if($ticket->assigned_at)
-                        <div class="info-item">
-                            <div class="info-label">
-                                <i class="fas fa-clock me-2 text-muted"></i>Ditugaskan Pada
-                            </div>
-                            <div class="info-value">{{ \Carbon\Carbon::parse($ticket->assigned_at)->format('d M Y, H:i') }}</div>
+                        <div class="ts-info-row">
+                            <div class="ts-info-lbl"><i class="fas fa-clock" aria-hidden="true"></i>Ditugaskan pada</div>
+                            <div class="ts-info-val">{{ \Carbon\Carbon::parse($ticket->assigned_at)->translatedFormat('d M Y, H:i') }}</div>
                         </div>
                         @endif
+
                         @if($ticket->resolved_at)
-                        <div class="info-item">
-                            <div class="info-label">
-                                <i class="fas fa-check-circle me-2 text-muted"></i>Diselesaikan
-                            </div>
-                            <div class="info-value text-success">{{ \Carbon\Carbon::parse($ticket->resolved_at)->format('d M Y, H:i') }}</div>
+                        <div class="ts-info-row">
+                            <div class="ts-info-lbl"><i class="fas fa-check-circle" aria-hidden="true"></i>Diselesaikan</div>
+                            <div class="ts-info-val success">{{ \Carbon\Carbon::parse($ticket->resolved_at)->translatedFormat('d M Y, H:i') }}</div>
                         </div>
                         @endif
+
                         @if($ticket->sla_due_at)
-                        <div class="info-item">
-                            <div class="info-label">
-                                <i class="fas fa-hourglass-half me-2 text-muted"></i>SLA Deadline
-                            </div>
-                            <div class="info-value @if(\Carbon\Carbon::now()->gt(\Carbon\Carbon::parse($ticket->sla_due_at)) && !in_array($ticket->status, ['resolved', 'closed'])) text-danger fw-bold @endif">
-                                <i class="fas fa-calendar-alt me-1"></i>
-                                {{ \Carbon\Carbon::parse($ticket->sla_due_at)->format('d M Y, H:i') }}
-                                @if(\Carbon\Carbon::now()->gt(\Carbon\Carbon::parse($ticket->sla_due_at)) && !in_array($ticket->status, ['resolved', 'closed']))
-                                    <span class="badge bg-danger ms-2">OVERDUE!</span>
+                        <div class="ts-info-row">
+                            <div class="ts-info-lbl"><i class="fas fa-hourglass-half" aria-hidden="true"></i>SLA deadline</div>
+                            <div class="ts-info-val {{ $isOverdue ? 'danger' : '' }}">
+                                {{ \Carbon\Carbon::parse($ticket->sla_due_at)->translatedFormat('d M Y, H:i') }}
+                                @if($isOverdue)
+                                    <span class="ts-badge ts-badge-priority-urgent" style="margin-top:3px;display:inline-flex">
+                                        <i class="fas fa-exclamation-triangle" aria-hidden="true"></i>Overdue
+                                    </span>
                                 @endif
+                                <div class="ts-sla-bar" role="progressbar" aria-valuenow="{{ $slaUsedPct }}" aria-valuemin="0" aria-valuemax="100">
+                                    <div class="ts-sla-fill" style="width:{{ $slaUsedPct }}%;background:{{ $isOverdue ? '#e11d48' : '#d97706' }}"></div>
+                                </div>
                             </div>
                         </div>
                         @endif
+
                         @if($ticket->reopen_count > 0)
-                        <div class="info-item">
-                            <div class="info-label">
-                                <i class="fas fa-undo-alt me-2 text-muted"></i>Jumlah Reopen
-                            </div>
-                            <div class="info-value">
-                                <span class="badge bg-warning">{{ $ticket->reopen_count }} kali</span>
+                        <div class="ts-info-row">
+                            <div class="ts-info-lbl"><i class="fas fa-undo-alt" aria-hidden="true"></i>Jumlah reopen</div>
+                            <div class="ts-info-val">
+                                <span class="ts-badge ts-badge-reopen">{{ $ticket->reopen_count }} kali</span>
                                 @if($ticket->reopened_at)
-                                    <div class="small text-muted mt-1">
-                                        Terakhir: {{ \Carbon\Carbon::parse($ticket->reopened_at)->format('d M Y, H:i') }}
-                                    </div>
+                                <div style="font-size:.68rem;color:#9ca3af;margin-top:3px">
+                                    Terakhir: {{ \Carbon\Carbon::parse($ticket->reopened_at)->translatedFormat('d M Y, H:i') }}
+                                </div>
                                 @endif
                             </div>
                         </div>
                         @endif
+
                     </div>
                 </div>
             </div>
 
-            <!-- Quick Actions Card -->
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-bolt me-2 text-warning"></i>Aksi Cepat
-                    </h5>
+            {{-- Quick Actions --}}
+            <div class="ts-card">
+                <div class="ts-card-head">
+                    <h2 class="ts-card-title" style="display:flex;align-items:center;gap:7px">
+                        <i class="fas fa-bolt" style="color:#d97706" aria-hidden="true"></i>Aksi cepat
+                    </h2>
                 </div>
-                <div class="card-body">
-                    <div class="d-grid gap-2">
+                <div class="ts-card-body">
+                    <div class="ts-actions">
+
                         @can('updateStatus', $ticket)
-                            @if(!in_array($ticket->status, ['resolved', 'closed']))
-                                <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#resolveModal">
-                                    <i class="fas fa-check-circle me-2"></i>Selesaikan Ticket
-                                </button>
+                            @if(!in_array($ticket->status, ['resolved','closed']))
+                            <button type="button" class="ts-act-btn ts-act-green"
+                                    data-bs-toggle="modal" data-bs-target="#resolveModal">
+                                <i class="fas fa-check-circle" aria-hidden="true"></i>Selesaikan ticket
+                            </button>
                             @endif
                         @endcan
 
                         @can('update', $ticket)
-                            @php
-                                $editRoute = auth()->user()->role === 'admin'
-                                    ? route('tickets.edit', $ticket)
-                                    : '#';
-                            @endphp
-                            @if($editRoute !== '#')
-                                <a href="{{ $editRoute }}" class="btn btn-outline-warning">
-                                    <i class="fas fa-edit me-2"></i>Edit Ticket
-                                </a>
-                            @endif
-                        @endcan
-
-                        @can('reopen', $ticket)
-                            @if(in_array($ticket->status, ['resolved', 'closed']))
-                                <button type="button" class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#reopenModal">
-                                    <i class="fas fa-undo-alt me-2"></i>Buka Kembali Ticket
-                                </button>
+                            @if(auth()->user()->role === 'admin')
+                            <a href="{{ route('tickets.edit', $ticket) }}" class="ts-act-btn ts-act-amber">
+                                <i class="fas fa-edit" aria-hidden="true"></i>Edit ticket
+                            </a>
                             @endif
                         @endcan
 
                         @can('take', $ticket)
-                            @if(is_null($ticket->assigned_to) && in_array($ticket->status, ['open']))
-                                @php
-                                    $takeRoute = auth()->user()->role === 'admin'
-                                        ? route('tickets.take', $ticket)
-                                        : route('it.tickets.take', $ticket);
-                                @endphp
-                                <form action="{{ $takeRoute }}" method="POST" class="d-grid">
-                                    @csrf
-                                    <button type="submit" class="btn btn-primary">
-                                        <i class="fas fa-hand-paper me-2"></i>Ambil Ticket Ini
-                                    </button>
-                                </form>
+                            @if(is_null($ticket->assigned_to) && $ticket->status === 'open')
+                            @php $takeRoute = auth()->user()->role === 'admin' ? route('tickets.take', $ticket) : route('it.tickets.take', $ticket); @endphp
+                            <form action="{{ $takeRoute }}" method="POST">
+                                @csrf
+                                <button type="submit" class="ts-act-btn ts-act-blue">
+                                    <i class="fas fa-hand-paper" aria-hidden="true"></i>Ambil ticket ini
+                                </button>
+                            </form>
+                            @endif
+                        @endcan
+
+                        @can('reopen', $ticket)
+                            @if(in_array($ticket->status, ['resolved','closed']))
+                            <button type="button" class="ts-act-btn ts-act-amber"
+                                    data-bs-toggle="modal" data-bs-target="#reopenModal">
+                                <i class="fas fa-undo-alt" aria-hidden="true"></i>Buka kembali ticket
+                            </button>
                             @endif
                         @endcan
 
                         @can('delete', $ticket)
-                            <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
-                                <i class="fas fa-trash me-2"></i>Hapus Ticket
-                            </button>
+                        <button type="button" class="ts-act-btn ts-act-red"
+                                data-bs-toggle="modal" data-bs-target="#deleteModal">
+                            <i class="fas fa-trash" aria-hidden="true"></i>Hapus ticket
+                        </button>
                         @endcan
+
                     </div>
                 </div>
             </div>
 
-            <!-- Activity Timeline Card -->
-            <div class="card">
-                <div class="card-header">
-                    <div class="d-flex align-items-center">
-                        <i class="fas fa-history me-2 text-info"></i>
-                        <h5 class="card-title mb-0">Riwayat Aktivitas</h5>
+            {{-- Activity Timeline --}}
+            <div class="ts-card">
+                <div class="ts-card-head">
+                    <div>
+                        <h2 class="ts-card-title" style="display:flex;align-items:center;gap:7px">
+                            <i class="fas fa-history" style="color:#0d9488" aria-hidden="true"></i>Riwayat aktivitas
+                        </h2>
+                        <div class="ts-card-sub">Semua perubahan pada ticket ini</div>
                     </div>
-                    <small class="text-muted">Semua perubahan pada ticket ini</small>
+                    <span style="font-size:.72rem;color:#9ca3af">{{ $histories->count() }} aktivitas</span>
                 </div>
-                <div class="card-body" style="max-height: 500px; overflow-y: auto;">
-                    <div class="timeline">
-                        @forelse($ticket->histories()->with('user')->latest()->get() as $history)
-                        <div class="timeline-item">
-                            <div class="timeline-marker bg-{{
-                                $history->action === 'created' ? 'primary' :
-                                ($history->action === 'updated' ? 'info' :
-                                ($history->action === 'assigned' ? 'warning' :
-                                ($history->action === 'taken' ? 'success' :
-                                ($history->action === 'status_changed' ? 'secondary' :
-                                ($history->action === 'resolved' ? 'success' :
-                                ($history->action === 'reopened' ? 'warning' : 'dark'))))))
-                            }}">
-                                @switch($history->action)
-                                    @case('created') <i class="fas fa-plus"></i> @break
-                                    @case('updated') <i class="fas fa-edit"></i> @break
-                                    @case('assigned') <i class="fas fa-user-plus"></i> @break
-                                    @case('taken') <i class="fas fa-hand-paper"></i> @break
-                                    @case('status_changed') <i class="fas fa-sync-alt"></i> @break
-                                    @case('resolved') <i class="fas fa-check-circle"></i> @break
-                                    @case('reopened') <i class="fas fa-undo-alt"></i> @break
-                                    @default <i class="fas fa-circle"></i>
-                                @endswitch
+
+                <div class="ts-card-body ts-timeline-scroll">
+                    <div class="ts-timeline">
+                        @forelse($histories as $history)
+                        @php
+                            $mapEntry = $actionDotMap[$history->action] ?? ['dot' => 'gray', 'icon' => 'fas fa-circle', 'tag' => $history->action];
+                            $meta     = $history->meta ? json_decode($history->meta, true) : null;
+                        @endphp
+                        <div class="ts-tl-item">
+                            <div class="ts-tl-dot {{ $mapEntry['dot'] }}" aria-hidden="true">
+                                <i class="{{ $mapEntry['icon'] }}"></i>
                             </div>
-                            <div class="timeline-content">
-                                <div class="card border-0 shadow-sm">
-                                    <div class="card-body py-3">
-                                        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
-                                            <div>
-                                                <span class="fw-semibold">{{ $history->user->name ?? 'System' }}</span>
-                                                <span class="text-muted mx-1">•</span>
-                                                <span class="small text-muted">{{ $history->created_at->diffForHumans() }}</span>
-                                            </div>
-                                            <span class="badge bg-{{
-                                                $history->action === 'created' ? 'primary' :
-                                                ($history->action === 'updated' ? 'info' :
-                                                ($history->action === 'assigned' ? 'warning' :
-                                                ($history->action === 'taken' ? 'success' :
-                                                ($history->action === 'status_changed' ? 'secondary' :
-                                                ($history->action === 'resolved' ? 'success' :
-                                                ($history->action === 'reopened' ? 'warning' : 'dark'))))))
-                                            }} bg-opacity-10 text-{{
-                                                $history->action === 'created' ? 'primary' :
-                                                ($history->action === 'updated' ? 'info' :
-                                                ($history->action === 'assigned' ? 'warning' :
-                                                ($history->action === 'taken' ? 'success' :
-                                                ($history->action === 'status_changed' ? 'secondary' :
-                                                ($history->action === 'resolved' ? 'success' :
-                                                ($history->action === 'reopened' ? 'warning' : 'dark'))))))
-                                            }} px-2 py-1">
-                                                {{ ucfirst(str_replace('_', ' ', $history->action)) }}
-                                            </span>
-                                        </div>
-                                        <p class="mb-0 mt-2 small">{{ $history->notes }}</p>
-                                        @if($history->action === 'reopened' && $history->meta)
-                                            @php $meta = json_decode($history->meta, true); @endphp
-                                            @if(isset($meta['reason']))
-                                                <div class="alert alert-warning alert-sm mt-2 mb-0 py-1 px-2 small">
-                                                    <i class="fas fa-comment me-1"></i>
-                                                    <strong>Alasan reopen:</strong> {{ $meta['reason'] }}
-                                                </div>
-                                            @endif
-                                        @endif
+                            <div class="ts-tl-card">
+                                <div class="ts-tl-head">
+                                    <div>
+                                        <span class="ts-tl-actor">{{ $history->user->name ?? 'System' }}</span>
+                                        <span class="ts-tl-time"> · {{ $history->created_at->diffForHumans() }}</span>
                                     </div>
+                                    <span class="ts-tl-tag {{ $mapEntry['tag'] }}">
+                                        {{ ucfirst(str_replace('_', ' ', $history->action)) }}
+                                    </span>
                                 </div>
+                                <div class="ts-tl-note">{{ $history->notes }}</div>
+                                @if($history->action === 'reopened' && isset($meta['reason']))
+                                <div class="ts-tl-reopen-reason">
+                                    <i class="fas fa-comment" aria-hidden="true"></i>
+                                    <span><strong>Alasan:</strong> {{ $meta['reason'] }}</span>
+                                </div>
+                                @endif
                             </div>
                         </div>
                         @empty
-                        <div class="text-center text-muted py-4">
-                            <i class="fas fa-history fa-2x mb-2 opacity-50"></i>
-                            <p class="mb-0">Belum ada riwayat aktivitas</p>
+                        <div style="text-align:center;padding:2rem 0;color:#9ca3af">
+                            <i class="fas fa-history" style="font-size:2rem;opacity:.4;display:block;margin-bottom:.5rem" aria-hidden="true"></i>
+                            <p style="font-size:.85rem;margin:0">Belum ada riwayat aktivitas</p>
                         </div>
                         @endforelse
                     </div>
                 </div>
-                @if($ticket->histories->count() > 5)
-                <div class="card-footer bg-white">
-                    <small class="text-muted">
-                        <i class="fas fa-clock me-1"></i>
-                        Menampilkan {{ $ticket->histories->count() }} aktivitas
-                    </small>
+
+                @if($histories->count() > 0)
+                <div class="ts-tl-footer">
+                    <div class="ts-tl-footer-text">
+                        <i class="fas fa-clock" aria-hidden="true"></i>
+                        Menampilkan {{ $histories->count() }} aktivitas
+                    </div>
                 </div>
                 @endif
             </div>
-        </div>
-    </div>
-</div>
 
-{{-- ==================== MODAL RESOLVE ==================== --}}
-<div class="modal fade" id="resolveModal" tabindex="-1" aria-hidden="true">
+        </div>{{-- /sidebar --}}
+    </div>{{-- /ts-grid --}}
+
+</div>{{-- /ts-page --}}
+
+{{-- ═══════════════ MODAL: RESOLVE ═══════════════ --}}
+<div class="modal fade" id="resolveModal" tabindex="-1" aria-labelledby="resolveModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
-            <div class="modal-header bg-success text-white">
-                <h5 class="modal-title">
-                    <i class="fas fa-check-circle me-2"></i>Selesaikan Ticket #{{ $ticket->ticket_number }}
+            <div class="modal-header resolve">
+                <h5 class="modal-title text-white" id="resolveModalLabel">
+                    <i class="fas fa-check-circle me-2" aria-hidden="true"></i>
+                    Selesaikan Ticket #{{ $ticket->ticket_number }}
                 </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Tutup"></button>
             </div>
-            @php
-                $statusRoute = auth()->user()->role === 'admin'
-                    ? route('tickets.status', $ticket)
-                    : route('it.tickets.status', $ticket);
-            @endphp
             <form action="{{ $statusRoute }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 <input type="hidden" name="status" value="resolved">
                 <div class="modal-body">
                     <div class="alert alert-info">
-                        <i class="fas fa-info-circle me-2"></i>
-                        <strong>Ticket:</strong> {{ $ticket->ticket_number }} - {{ strip_tags($ticket->title) }}
+                        <i class="fas fa-info-circle me-2" aria-hidden="true"></i>
+                        <strong>Ticket:</strong> {{ $ticket->ticket_number }} — {{ strip_tags($ticket->title) }}
                     </div>
-
                     <div class="mb-4">
-                        <label class="form-label fw-bold">
-                            <i class="fas fa-comment-dots me-1 text-danger"></i>
-                            Deskripsi Penyelesaian <span class="text-danger">*</span>
+                        <label class="form-label fw-semibold" for="resolution_notes">
+                            <i class="fas fa-comment-dots me-1 text-danger" aria-hidden="true"></i>
+                            Deskripsi penyelesaian <span class="text-danger">*</span>
                         </label>
-                        <textarea name="resolution_notes" class="form-control" rows="5" required
-                                  placeholder="Jelaskan langkah-langkah penyelesaian, solusi yang diterapkan, dan hasil akhir..."></textarea>
+                        <textarea id="resolution_notes" name="resolution_notes" class="form-control" rows="5" required
+                                  placeholder="Jelaskan langkah-langkah penyelesaian, solusi yang diterapkan, dan hasil akhir…"></textarea>
                         <div class="form-text">
-                            <i class="fas fa-lightbulb me-1 text-warning"></i>
-                            Berikan penjelasan yang detail agar user memahami solusi yang diberikan
+                            <i class="fas fa-lightbulb me-1 text-warning" aria-hidden="true"></i>
+                            Berikan penjelasan detail agar user memahami solusi yang diberikan.
                         </div>
                     </div>
-
-                    <div class="mb-4">
-                        <label class="form-label fw-bold">
-                            <i class="fas fa-paperclip me-1"></i>
-                            Lampiran Bukti (Opsional)
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold" for="resolution_attachments">
+                            <i class="fas fa-paperclip me-1" aria-hidden="true"></i>Lampiran bukti (opsional)
                         </label>
-                        <input type="file" name="resolution_attachments[]" class="form-control" multiple
-                               accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt">
+                        <input id="resolution_attachments" type="file" name="resolution_attachments[]"
+                               class="form-control" multiple accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt">
                         <div class="form-text">
-                            <i class="fas fa-info-circle me-1"></i>
-                            Upload gambar, PDF, atau dokumen sebagai bukti penyelesaian (maks 5MB per file)
+                            Gambar, PDF, atau dokumen sebagai bukti penyelesaian (maks 5 MB per file).
                         </div>
                     </div>
-
-                    <div class="alert alert-warning">
-                        <i class="fas fa-exclamation-triangle me-2"></i>
-                        <strong>Perhatian:</strong> Setelah ticket diselesaikan, status tidak dapat diubah kembali.
+                    <div class="alert alert-warning mb-0">
+                        <i class="fas fa-exclamation-triangle me-2" aria-hidden="true"></i>
+                        <strong>Perhatian:</strong> Setelah diselesaikan, status tidak dapat diubah kecuali dibuka kembali.
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                        <i class="fas fa-times me-1"></i>Batal
+                        <i class="fas fa-times me-1" aria-hidden="true"></i>Batal
                     </button>
                     <button type="submit" class="btn btn-success">
-                        <i class="fas fa-check-circle me-1"></i>Konfirmasi Selesai
+                        <i class="fas fa-check-circle me-1" aria-hidden="true"></i>Konfirmasi selesai
                     </button>
                 </div>
             </form>
@@ -478,46 +468,36 @@
     </div>
 </div>
 
-{{-- ==================== MODAL REOPEN ==================== --}}
-<div class="modal fade" id="reopenModal" tabindex="-1" aria-hidden="true">
+{{-- ═══════════════ MODAL: REOPEN ═══════════════ --}}
+<div class="modal fade" id="reopenModal" tabindex="-1" aria-labelledby="reopenModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        @php
-            $reopenRoute = auth()->user()->role === 'admin'
-                ? route('tickets.reopen', $ticket)
-                : route('it.tickets.reopen', $ticket);
-        @endphp
         <form action="{{ $reopenRoute }}" method="POST">
             @csrf
-            <div class="modal-content border-0 shadow-lg">
-                <div class="modal-header bg-warning text-dark">
-                    <h5 class="modal-title">
-                        <i class="fas fa-undo-alt me-2"></i>Buka Kembali Ticket #{{ $ticket->ticket_number }}
+            <div class="modal-content">
+                <div class="modal-header reopen">
+                    <h5 class="modal-title" id="reopenModalLabel">
+                        <i class="fas fa-undo-alt me-2" aria-hidden="true"></i>
+                        Buka Kembali Ticket #{{ $ticket->ticket_number }}
                     </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
                 </div>
                 <div class="modal-body">
                     <div class="alert alert-warning">
-                        <i class="fas fa-exclamation-triangle me-2"></i>
-                        Anda akan membuka kembali ticket yang sudah selesai. Ticket akan berstatus <strong>OPEN</strong>.
+                        <i class="fas fa-exclamation-triangle me-2" aria-hidden="true"></i>
+                        Ticket akan kembali berstatus <strong>OPEN</strong> dan dapat dikerjakan ulang.
                     </div>
-
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">
-                            <i class="fas fa-comment me-1"></i>Alasan Dibuka Kembali <span class="text-danger">*</span>
+                        <label class="form-label fw-semibold" for="reopen_reason">
+                            <i class="fas fa-comment me-1" aria-hidden="true"></i>
+                            Alasan dibuka kembali <span class="text-danger">*</span>
                         </label>
-                        <textarea name="reopen_reason"
-                                  class="form-control"
-                                  rows="4"
-                                  required
-                                  placeholder="Jelaskan mengapa ticket ini perlu dibuka kembali..."></textarea>
-                        <div class="form-text">
-                            Alasan ini akan dicatat dalam history ticket.
-                        </div>
+                        <textarea id="reopen_reason" name="reopen_reason" class="form-control" rows="4" required
+                                  placeholder="Jelaskan mengapa ticket ini perlu dibuka kembali…"></textarea>
+                        <div class="form-text">Alasan akan dicatat dalam riwayat ticket.</div>
                     </div>
-
                     @if($ticket->resolution_notes)
-                    <div class="alert alert-info">
-                        <i class="fas fa-info-circle me-2"></i>
+                    <div class="alert alert-info mb-0">
+                        <i class="fas fa-info-circle me-2" aria-hidden="true"></i>
                         <strong>Solusi sebelumnya:</strong><br>
                         {{ \Illuminate\Support\Str::limit(strip_tags($ticket->resolution_notes), 200) }}
                     </div>
@@ -525,10 +505,10 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                        <i class="fas fa-times me-1"></i> Batal
+                        <i class="fas fa-times me-1" aria-hidden="true"></i>Batal
                     </button>
                     <button type="submit" class="btn btn-warning">
-                        <i class="fas fa-undo-alt me-1"></i> Ya, Buka Kembali
+                        <i class="fas fa-undo-alt me-1" aria-hidden="true"></i>Ya, buka kembali
                     </button>
                 </div>
             </div>
@@ -536,32 +516,32 @@
     </div>
 </div>
 
-{{-- ==================== MODAL DELETE ==================== --}}
-<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+{{-- ═══════════════ MODAL: DELETE ═══════════════ --}}
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title">
-                    <i class="fas fa-exclamation-triangle me-2"></i>Konfirmasi Hapus
+            <div class="modal-header delete">
+                <h5 class="modal-title text-white" id="deleteModalLabel">
+                    <i class="fas fa-exclamation-triangle me-2" aria-hidden="true"></i>Konfirmasi hapus
                 </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Tutup"></button>
             </div>
             <div class="modal-body">
                 <p>Apakah Anda yakin ingin menghapus ticket <strong>#{{ $ticket->ticket_number }}</strong>?</p>
                 <p class="text-danger mb-0">
-                    <i class="fas fa-info-circle me-1"></i>
-                    Tindakan ini tidak dapat dibatalkan!
+                    <i class="fas fa-info-circle me-1" aria-hidden="true"></i>
+                    Tindakan ini tidak dapat dibatalkan dan semua data terkait akan dihapus permanen.
                 </p>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    <i class="fas fa-times me-1"></i>Batal
+                    <i class="fas fa-times me-1" aria-hidden="true"></i>Batal
                 </button>
                 <form action="{{ route('tickets.destroy', $ticket) }}" method="POST" class="d-inline">
                     @csrf
                     @method('DELETE')
                     <button type="submit" class="btn btn-danger">
-                        <i class="fas fa-trash me-1"></i>Ya, Hapus
+                        <i class="fas fa-trash me-1" aria-hidden="true"></i>Ya, hapus permanen
                     </button>
                 </form>
             </div>
@@ -570,178 +550,3 @@
 </div>
 
 @endsection
-
-@push('styles')
-<style>
-    /* Avatar Styles */
-    .avatar-sm {
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 600;
-        color: white;
-    }
-
-    .avatar-lg {
-        width: 48px;
-        height: 48px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.25rem;
-    }
-
-    /* Info List Styles */
-    .info-list {
-        display: flex;
-        flex-direction: column;
-        gap: 1rem;
-    }
-
-    .info-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding-bottom: 0.75rem;
-        border-bottom: 1px solid #e5e7eb;
-    }
-
-    .info-item:last-child {
-        border-bottom: none;
-        padding-bottom: 0;
-    }
-
-    .info-label {
-        font-size: 0.875rem;
-        color: #6b7280;
-        font-weight: 500;
-    }
-
-    .info-value {
-        font-size: 0.875rem;
-        color: #1f2937;
-    }
-
-    /* Timeline Styles */
-    .timeline {
-        position: relative;
-        padding-left: 35px;
-    }
-
-    .timeline::before {
-        content: '';
-        position: absolute;
-        left: 17px;
-        top: 0;
-        bottom: 0;
-        width: 2px;
-        background: linear-gradient(to bottom, #e5e7eb, #d1d5db, #e5e7eb);
-    }
-
-    .timeline-item {
-        position: relative;
-        margin-bottom: 1rem;
-    }
-
-    .timeline-item:last-child {
-        margin-bottom: 0;
-    }
-
-    .timeline-marker {
-        position: absolute;
-        left: -35px;
-        top: 0;
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        z-index: 1;
-        font-size: 0.75rem;
-    }
-
-    .timeline-content {
-        margin-left: 15px;
-    }
-
-    /* Attachment Card */
-    .attachment-card {
-        transition: all 0.3s ease;
-        border: 1px solid #e5e7eb;
-    }
-
-    .attachment-card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        border-color: #0d6efd;
-    }
-
-    /* Description Styles */
-    .ticket-description {
-        line-height: 1.6;
-        white-space: pre-wrap;
-        word-wrap: break-word;
-    }
-
-    .resolution-notes {
-        line-height: 1.6;
-        white-space: pre-wrap;
-        word-wrap: break-word;
-    }
-
-    /* Card Header */
-    .card-header {
-        background: white !important;
-        border-bottom: 1px solid #e5e7eb !important;
-        padding: 1rem 1.25rem;
-    }
-
-    /* Responsive */
-    @media (max-width: 992px) {
-        .timeline {
-            padding-left: 30px;
-        }
-
-        .timeline-marker {
-            width: 28px;
-            height: 28px;
-            left: -30px;
-            font-size: 0.7rem;
-        }
-
-        .timeline-content {
-            margin-left: 10px;
-        }
-
-        .info-item {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 0.5rem;
-        }
-    }
-
-    /* Scrollbar untuk timeline */
-    .card-body::-webkit-scrollbar {
-        width: 4px;
-    }
-
-    .card-body::-webkit-scrollbar-track {
-        background: #f1f1f1;
-        border-radius: 10px;
-    }
-
-    .card-body::-webkit-scrollbar-thumb {
-        background: #c1c1c1;
-        border-radius: 10px;
-    }
-
-    .card-body::-webkit-scrollbar-thumb:hover {
-        background: #a8a8a8;
-    }
-</style>
-@endpush

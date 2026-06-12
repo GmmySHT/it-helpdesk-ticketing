@@ -19,7 +19,7 @@
     --gray-700: #495057;
     --gray-800: #343a40;
     --gray-900: #212529;
-    
+
     --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
     --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
     --shadow-lg: 0 10px 25px rgba(0,0,0,0.1);
@@ -634,7 +634,7 @@
     .header__container {
         padding: 0 1.5rem;
     }
-    
+
     .header__search {
         margin: 0 1.5rem;
         max-width: 400px;
@@ -645,27 +645,27 @@
     .header__container {
         padding: 0 1rem;
     }
-    
+
     .header__search {
         display: none;
     }
-    
+
     .nav__item--mobile {
         display: block;
     }
-    
+
     .user__info {
         display: none;
     }
-    
+
     .brand__text {
         display: none;
     }
-    
+
     .nav__list {
         gap: 0.25rem;
     }
-    
+
     .dropdown__menu {
         position: fixed;
         left: 1rem;
@@ -679,15 +679,15 @@
     .header__container {
         padding: 0 0.75rem;
     }
-    
+
     .dropdown__menu {
         min-width: auto;
     }
-    
+
     .profile__menu {
         min-width: auto;
     }
-    
+
     .notif__menu {
         min-width: auto;
     }

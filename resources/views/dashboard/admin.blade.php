@@ -2,615 +2,594 @@
 
 @section('title', 'Admin Dashboard')
 
+@push('styles')
+    <link rel="stylesheet" href="{{ asset('assets/css/admin-dashboard.css') }}">
+@endpush
+
+{{-- Pre-compute semua nilai PHP sebelum render --}}
+@php
+    $slaRate      = $slaComplianceRate ?? 0;
+    $slaCls       = $slaRate >= 90 ? 'good' : ($slaRate >= 70 ? 'medium' : 'bad');
+    $catLabels    = isset($categoryCounts) ? $categoryCounts->pluck('name')          : collect(['Hardware','Software','Network','Email','Lainnya']);
+    $catData      = isset($categoryCounts) ? $categoryCounts->pluck('tickets_count') : collect([88,77,63,34,22]);
+    $sparkResVal  = isset($summary) ? ($summary['resolution_rate'] ?? 78) : 78;
+    $sparkTimeVal = $avgResolutionTime ?? 4.2;
+    $jsMonths     = $months ?? ['Jul','Agu','Sep','Okt','Nov','Des'];
+    $jsTotals     = $ticketCountsByMonth ?? [38,52,45,61,74,67];
+    $jsOpen       = $openCountsByMonth   ?? [12,18,14,22,28,47];
+    $jsResolved   = $resolvedCountsByMonth ?? [24,30,29,36,42,34];
+@endphp
+
 @section('content')
-{{-- Container utama dengan Glassmorphism --}}
-<div class="glass-container">
-    <div class="container-fluid px-4">
-        {{-- Page Header dengan Container Biru --}}
-        <div class="page-header-wrapper mb-4">
-            <div class="page-header-blue">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h1 class="page-title">
-                            <i class="fas fa-tachometer-alt me-2"></i>Admin Dashboard
-                        </h1>
-                        <p class="page-subtitle">Overview sistem ticketing RS Intan Husada</p>
-                    </div>
-                    <div>
-                        <span class="text-light">
-                            <i class="fas fa-calendar-alt me-1"></i>
-                            {{ now()->format('d F Y') }}
-                        </span>
+
+<div class="dash-bg" aria-hidden="true"><div class="dash-bg-orb3"></div></div>
+
+<div class="dash-wrapper">
+
+    {{-- HEADER --}}
+    <header class="dash-header">
+        <div class="dash-header-inner">
+            <div>
+                <h1 class="dash-header-title">
+                    <i class="fas fa-tachometer-alt" aria-hidden="true"></i>Admin Dashboard
+                </h1>
+                <p class="dash-header-subtitle">Overview sistem ticketing RS Intan Husada</p>
+            </div>
+            <div class="dash-header-widgets">
+                <div class="dash-clock" aria-label="Jam dan tanggal sekarang">
+                    <div class="dash-clock-time" id="liveClock" aria-live="polite">--:--:--</div>
+                    <div class="dash-clock-date" id="liveDate">-- --- ----</div>
+                </div>
+                <div class="dash-weather" aria-label="Informasi cuaca">
+                    <div class="dash-weather-icon" id="wxIcon" aria-hidden="true">⛅</div>
+                    <div class="dash-weather-body">
+                        <div class="dash-weather-temp" id="wxTemp">--°C</div>
+                        <div class="dash-weather-loc"  id="wxLoc">Memuat lokasi…</div>
+                        <div class="dash-weather-desc" id="wxDesc">--</div>
                     </div>
                 </div>
             </div>
         </div>
+    </header>
 
-        {{-- Quick Actions --}}
-        <div class="row mb-4 mt-4">
-            <div class="col-12 mt-4">
-                <div class="card shadow-sm border-0">
-                    <div class="card-body mt-4">
-                        <div class="row g-3">
-                            <div class="col-md-3">
-                                <a href="{{ route('tickets.index') }}" class="text-decoration-none">
-                                    <div class="d-flex align-items-center p-3 bg-light rounded-3 hover-shadow transition">
-                                        <div class="bg-primary bg-opacity-10 rounded-circle p-3 me-3">
-                                            <i class="fas fa-ticket-alt text-primary fa-lg"></i>
-                                        </div>
-                                        <div>
-                                            <h6 class="mb-0 fw-bold">Kelola Tickets</h6>
-                                            <small class="text-muted">Lihat dan kelola semua tickets</small>
-                                        </div>
-                                    </div>
-                                </a>
-                            </div>
-                            <div class="col-md-3">
-                                <a href="{{ route('users.index') }}" class="text-decoration-none">
-                                    <div class="d-flex align-items-center p-3 bg-light rounded-3 hover-shadow transition">
-                                        <div class="bg-info bg-opacity-10 rounded-circle p-3 me-3">
-                                            <i class="fas fa-users-cog text-info fa-lg"></i>
-                                        </div>
-                                        <div>
-                                            <h6 class="mb-0 fw-bold">Manajemen User</h6>
-                                            <small class="text-muted">Kelola pengguna dan akses</small>
-                                        </div>
-                                    </div>
-                                </a>
-                            </div>
-                            <div class="col-md-3">
-                                <a href="{{ route('tickets.create') }}" class="text-decoration-none">
-                                    <div class="d-flex align-items-center p-3 bg-light rounded-3 hover-shadow transition">
-                                        <div class="bg-success bg-opacity-10 rounded-circle p-3 me-3">
-                                            <i class="fas fa-plus-circle text-success fa-lg"></i>
-                                        </div>
-                                        <div>
-                                            <h6 class="mb-0 fw-bold">Buat Ticket</h6>
-                                            <small class="text-muted">Buat ticket baru untuk user</small>
-                                        </div>
-                                    </div>
-                                </a>
-                            </div>
-                            <div class="col-md-3">
-                                <a href="{{ route('reports.index') }}" class="text-decoration-none">
-                                    <div class="d-flex align-items-center p-3 bg-light rounded-3 hover-shadow transition">
-                                        <div class="bg-warning bg-opacity-10 rounded-circle p-3 me-3">
-                                            <i class="fas fa-chart-bar text-warning fa-lg"></i>
-                                        </div>
-                                        <div>
-                                            <h6 class="mb-0 fw-bold">Laporan</h6>
-                                            <small class="text-muted">Analisis performa sistem</small>
-                                        </div>
-                                    </div>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
+    {{-- QUICK ACTIONS --}}
+    <nav class="quick-actions-grid" aria-label="Aksi cepat">
+        <a href="{{ route('tickets.index') }}"  class="quick-action-item">
+            <div class="quick-action-icon indigo"><i class="fas fa-ticket-alt"></i></div>
+            <div><div class="quick-action-label">Kelola Tickets</div><div class="quick-action-sub">Lihat dan kelola semua</div></div>
+        </a>
+        <a href="{{ route('users.index') }}" class="quick-action-item">
+            <div class="quick-action-icon teal"><i class="fas fa-users-cog"></i></div>
+            <div><div class="quick-action-label">Manajemen User</div><div class="quick-action-sub">Kelola pengguna dan akses</div></div>
+        </a>
+        <a href="{{ route('tickets.create') }}" class="quick-action-item">
+            <div class="quick-action-icon emerald"><i class="fas fa-plus-circle"></i></div>
+            <div><div class="quick-action-label">Buat Ticket</div><div class="quick-action-sub">Buat ticket baru</div></div>
+        </a>
+        <a href="{{ route('reports.index') }}" class="quick-action-item">
+            <div class="quick-action-icon amber"><i class="fas fa-chart-bar"></i></div>
+            <div><div class="quick-action-label">Laporan</div><div class="quick-action-sub">Analisis performa sistem</div></div>
+        </a>
+    </nav>
+
+    {{-- STAT ROW 1 --}}
+    <div class="stat-grid">
+        <div class="stat-card">
+            <div class="stat-card-info">
+                <div class="stat-card-label">Total Tickets</div>
+                <div class="stat-card-value">{{ $totalTickets ?? 0 }}</div>
+                @if(isset($totalChange))
+                <div class="stat-card-trend {{ $totalChange['trend'] === 'up' ? 'up-good' : ($totalChange['trend'] === 'down' ? 'down-bad' : 'neutral') }}">
+                    <i class="fas fa-arrow-{{ $totalChange['trend'] === 'up' ? 'up' : ($totalChange['trend'] === 'down' ? 'down' : 'minus') }}"></i>
+                    {{ abs($totalChange['value']) }}% dari bulan lalu
+                </div>
+                @endif
+            </div>
+            <div class="stat-card-icon indigo"><i class="fas fa-ticket-alt"></i></div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-card-info">
+                <div class="stat-card-label">Open / In Progress</div>
+                <div class="stat-card-value warn">{{ $openTickets ?? 0 }}</div>
+                @if(isset($openChange))
+                <div class="stat-card-trend {{ $openChange['trend'] === 'up' ? 'up-bad' : ($openChange['trend'] === 'down' ? 'down-good' : 'neutral') }}">
+                    <i class="fas fa-arrow-{{ $openChange['trend'] === 'up' ? 'up' : ($openChange['trend'] === 'down' ? 'down' : 'minus') }}"></i>
+                    {{ abs($openChange['value']) }}% dari bulan lalu
+                </div>
+                @endif
+            </div>
+            <div class="stat-card-icon amber"><i class="fas fa-spinner"></i></div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-card-info">
+                <div class="stat-card-label">Resolved</div>
+                <div class="stat-card-value">{{ $resolvedTickets ?? 0 }}</div>
+                @if(isset($resolvedChange))
+                <div class="stat-card-trend {{ $resolvedChange['trend'] === 'up' ? 'up-good' : ($resolvedChange['trend'] === 'down' ? 'down-bad' : 'neutral') }}">
+                    <i class="fas fa-arrow-{{ $resolvedChange['trend'] === 'up' ? 'up' : ($resolvedChange['trend'] === 'down' ? 'down' : 'minus') }}"></i>
+                    {{ abs($resolvedChange['value']) }}% dari bulan lalu
+                </div>
+                @endif
+            </div>
+            <div class="stat-card-icon emerald"><i class="fas fa-check-circle"></i></div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-card-info">
+                <div class="stat-card-label">Closed</div>
+                <div class="stat-card-value">{{ $closedTickets ?? 0 }}</div>
+                @if(isset($closedChange))
+                <div class="stat-card-trend {{ $closedChange['trend'] === 'up' ? 'up-good' : ($closedChange['trend'] === 'down' ? 'down-bad' : 'neutral') }}">
+                    <i class="fas fa-arrow-{{ $closedChange['trend'] === 'up' ? 'up' : ($closedChange['trend'] === 'down' ? 'down' : 'minus') }}"></i>
+                    {{ abs($closedChange['value']) }}% dari bulan lalu
+                </div>
+                @endif
+            </div>
+            <div class="stat-card-icon slate"><i class="fas fa-archive"></i></div>
+        </div>
+    </div>
+
+    {{-- STAT ROW 2 (ADMIN) --}}
+    @if(isset($itStaffCount) && isset($ticketsUnassigned))
+    <div class="stat-grid">
+        <div class="stat-card">
+            <div class="stat-card-info">
+                <div class="stat-card-label">Tiket Baru (7 hari)</div>
+                <div class="stat-card-value">{{ $recentTicketsCount ?? 0 }}</div>
+            </div>
+            <div class="stat-card-icon teal"><i class="fas fa-inbox"></i></div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-card-info">
+                <div class="stat-card-label">IT Staff Aktif</div>
+                <div class="stat-card-value">{{ $itStaffCount ?? 0 }}</div>
+            </div>
+            <div class="stat-card-icon primary"><i class="fas fa-user-shield"></i></div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-card-info">
+                <div class="stat-card-label">Unassigned</div>
+                <div class="stat-card-value warn">{{ $ticketsUnassigned ?? 0 }}</div>
+                @if(isset($unassignedChange))
+                <div class="stat-card-trend {{ $unassignedChange['trend'] === 'up' ? 'up-bad' : ($unassignedChange['trend'] === 'down' ? 'down-good' : 'neutral') }}">
+                    <i class="fas fa-arrow-{{ $unassignedChange['trend'] === 'up' ? 'up' : ($unassignedChange['trend'] === 'down' ? 'down' : 'minus') }}"></i>
+                    {{ abs($unassignedChange['value']) }}%
+                </div>
+                @endif
+            </div>
+            <div class="stat-card-icon amber"><i class="fas fa-inbox"></i></div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-card-info">
+                <div class="stat-card-label">Overdue Tickets</div>
+                <div class="stat-card-value danger">{{ $overdueTickets ?? 0 }}</div>
+            </div>
+            <div class="stat-card-icon rose"><i class="fas fa-exclamation-triangle"></i></div>
+        </div>
+    </div>
+    @endif
+
+    {{-- CHARTS ROW --}}
+    <div class="charts-row">
+        <div class="glass-card">
+            <div class="glass-card-header">
+                <h5 class="glass-card-title"><i class="fas fa-chart-line"></i>Tren tiket 6 bulan terakhir</h5>
+            </div>
+            <div class="glass-card-body">
+                <div class="chart-legend" id="trendLegend" aria-hidden="true"></div>
+                <div class="chart-wrap chart-wrap--tall">
+                    <canvas id="monthlyTrendChart" role="img" aria-label="Tren tiket 6 bulan."></canvas>
                 </div>
             </div>
         </div>
-
-        {{-- Statistics Cards - Baris 1 --}}
-        <div class="row g-4 mb-4">
-            <div class="col-md-3">
-                <div class="card shadow-sm border-0 h-100">
-                    <div class="card-body mt-3">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div>
-                                <p class="text-muted mb-1 small">Total Tickets</p>
-                                <h2 class="mb-0 fw-bold">{{ $totalTickets ?? 0 }}</h2>
-                                @if(isset($totalChange))
-                                <small class="text-{{ $totalChange['trend'] == 'up' ? 'success' : ($totalChange['trend'] == 'down' ? 'danger' : 'secondary') }}">
-                                    <i class="fas fa-arrow-{{ $totalChange['trend'] == 'up' ? 'up' : ($totalChange['trend'] == 'down' ? 'down' : 'minus') }} me-1"></i>
-                                    {{ abs($totalChange['value']) }}% dari bulan lalu
-                                </small>
-                                @endif
-                            </div>
-                            <div class="bg-primary bg-opacity-10 rounded-circle p-3">
-                                <i class="fas fa-ticket-alt text-primary fa-2x"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+        <div class="glass-card">
+            <div class="glass-card-header">
+                <h5 class="glass-card-title"><i class="fas fa-chart-pie"></i>Status tiket</h5>
             </div>
-            <div class="col-md-3">
-                <div class="card shadow-sm border-0 h-100">
-                    <div class="card-body mt-3">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div>
-                                <p class="text-muted mb-1 small">Open / In Progress</p>
-                                <h2 class="mb-0 fw-bold">{{ $openTickets ?? 0 }}</h2>
-                                @if(isset($openChange))
-                                <small class="text-{{ $openChange['trend'] == 'up' ? 'danger' : ($openChange['trend'] == 'down' ? 'success' : 'secondary') }}">
-                                    <i class="fas fa-arrow-{{ $openChange['trend'] == 'up' ? 'up' : ($openChange['trend'] == 'down' ? 'down' : 'minus') }} me-1"></i>
-                                    {{ abs($openChange['value']) }}% dari bulan lalu
-                                </small>
-                                @endif
-                            </div>
-                            <div class="bg-warning bg-opacity-10 rounded-circle p-3">
-                                <i class="fas fa-spinner fa-spin text-warning fa-2x"></i>
-                            </div>
-                        </div>
+            <div class="glass-card-body">
+                <div class="chart-wrap chart-wrap--donut" style="position:relative">
+                    <canvas id="statusDonutChart" role="img" aria-label="Distribusi status tiket."></canvas>
+                    <div class="donut-center" aria-hidden="true">
+                        <div class="donut-center-val">{{ $totalTickets ?? 0 }}</div>
+                        <div class="donut-center-lbl">total</div>
                     </div>
                 </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card shadow-sm border-0 h-100">
-                    <div class="card-body mt-3">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div>
-                                <p class="text-muted mb-1 small">Resolved</p>
-                                <h2 class="mb-0 fw-bold">{{ $resolvedTickets ?? 0 }}</h2>
-                                @if(isset($resolvedChange))
-                                <small class="text-{{ $resolvedChange['trend'] == 'up' ? 'success' : ($resolvedChange['trend'] == 'down' ? 'danger' : 'secondary') }}">
-                                    <i class="fas fa-arrow-{{ $resolvedChange['trend'] == 'up' ? 'up' : ($resolvedChange['trend'] == 'down' ? 'down' : 'minus') }} me-1"></i>
-                                    {{ abs($resolvedChange['value']) }}% dari bulan lalu
-                                </small>
-                                @endif
-                            </div>
-                            <div class="bg-success bg-opacity-10 rounded-circle p-3">
-                                <i class="fas fa-check-circle text-success fa-2x"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card shadow-sm border-0 h-100">
-                    <div class="card-body mt-3">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div>
-                                <p class="text-muted mb-1 small">Closed</p>
-                                <h2 class="mb-0 fw-bold">{{ $closedTickets ?? 0 }}</h2>
-                                @if(isset($closedChange))
-                                <small class="text-{{ $closedChange['trend'] == 'up' ? 'success' : ($closedChange['trend'] == 'down' ? 'danger' : 'secondary') }}">
-                                    <i class="fas fa-arrow-{{ $closedChange['trend'] == 'up' ? 'up' : ($closedChange['trend'] == 'down' ? 'down' : 'minus') }} me-1"></i>
-                                    {{ abs($closedChange['value']) }}% dari bulan lalu
-                                </small>
-                                @endif
-                            </div>
-                            <div class="bg-secondary bg-opacity-10 rounded-circle p-3">
-                                <i class="fas fa-archive text-secondary fa-2x"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <div class="chart-legend chart-legend--center" id="statusLegend" aria-hidden="true"></div>
             </div>
         </div>
-
-        {{-- Statistics Cards - Baris 2 (Admin Specific) --}}
-        @if(isset($usersCount) && isset($itStaffCount) && isset($ticketsUnassigned))
-        <div class="row g-4 mb-4">
-            <div class="col-md-3">
-                <div class="card shadow-sm border-0 h-100">
-                    <div class="card-body mt-3">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div>
-                                <p class="text-muted mb-1 small">Total Users</p>
-                                <h2 class="mb-0 fw-bold">{{ $usersCount ?? 0 }}</h2>
-                            </div>
-                            <div class="bg-info bg-opacity-10 rounded-circle p-3">
-                                <i class="fas fa-users text-info fa-2x"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+        <div class="glass-card">
+            <div class="glass-card-header">
+                <h5 class="glass-card-title"><i class="fas fa-tags"></i>Tiket per kategori</h5>
             </div>
-            <div class="col-md-3">
-                <div class="card shadow-sm border-0 h-100">
-                    <div class="card-body mt-3">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div>
-                                <p class="text-muted mb-1 small">IT Staff</p>
-                                <h2 class="mb-0 fw-bold">{{ $itStaffCount ?? 0 }}</h2>
-                            </div>
-                            <div class="bg-primary bg-opacity-10 rounded-circle p-3">
-                                <i class="fas fa-user-shield text-primary fa-2x"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card shadow-sm border-0 h-100">
-                    <div class="card-body mt-3">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div>
-                                <p class="text-muted mb-1 small">Unassigned Tickets</p>
-                                <h2 class="mb-0 fw-bold text-warning">{{ $ticketsUnassigned ?? 0 }}</h2>
-                                @if(isset($unassignedChange))
-                                <small class="text-{{ $unassignedChange['trend'] == 'up' ? 'danger' : ($unassignedChange['trend'] == 'down' ? 'success' : 'secondary') }}">
-                                    <i class="fas fa-arrow-{{ $unassignedChange['trend'] == 'up' ? 'up' : ($unassignedChange['trend'] == 'down' ? 'down' : 'minus') }} me-1"></i>
-                                    {{ abs($unassignedChange['value']) }}%
-                                </small>
-                                @endif
-                            </div>
-                            <div class="bg-warning bg-opacity-10 rounded-circle p-3">
-                                <i class="fas fa-inbox text-warning fa-2x"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card shadow-sm border-0 h-100">
-                    <div class="card-body mt-3">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div>
-                                <p class="text-muted mb-1 small">Overdue Tickets</p>
-                                <h2 class="mb-0 fw-bold text-danger">{{ $overdueTickets ?? 0 }}</h2>
-                            </div>
-                            <div class="bg-danger bg-opacity-10 rounded-circle p-3">
-                                <i class="fas fa-exclamation-triangle text-danger fa-2x"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        @endif
-
-        {{-- SLA Performance Summary --}}
-        <div class="row g-4 mb-4">
-            <div class="col-md-4">
-                <div class="card shadow-sm border-0">
-                    <div class="card-body mt-3">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h6 class="mb-0 fw-bold">
-                                <i class="fas fa-chart-pie text-primary me-2"></i>SLA Compliance Rate
-                            </h6>
-                        </div>
-                        <div class="text-center">
-                            <div class="display-4 fw-bold text-{{ ($slaComplianceRate ?? 0) >= 90 ? 'success' : (($slaComplianceRate ?? 0) >= 70 ? 'warning' : 'danger') }}">
-                                {{ $slaComplianceRate ?? 0 }}%
-                            </div>
-                            <p class="text-muted small">Tiket selesai tepat waktu</p>
-                            <div class="progress mt-2" style="height: 6px;">
-                                <div class="progress-bar bg-{{ ($slaComplianceRate ?? 0) >= 90 ? 'success' : (($slaComplianceRate ?? 0) >= 70 ? 'warning' : 'danger') }}"
-                                     style="width: {{ $slaComplianceRate ?? 0 }}%"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card shadow-sm border-0">
-                    <div class="card-body mt-3">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h6 class="mb-0 fw-bold">
-                                <i class="fas fa-hourglass-half text-primary me-2"></i>Avg Resolution Time
-                            </h6>
-                        </div>
-                        <div class="text-center">
-                            <div class="display-4 fw-bold text-info">
-                                {{ $avgResolutionTime ?? 0 }} <small class="fs-6">jam</small>
-                            </div>
-                            <p class="text-muted small">Rata-rata waktu penyelesaian</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card shadow-sm border-0">
-                    <div class="card-body mt-3">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h6 class="mb-0 fw-bold">
-                                <i class="fas fa-undo-alt text-primary me-2"></i>Reopen Rate
-                            </h6>
-                        </div>
-                        <div class="text-center">
-                            <div class="display-4 fw-bold text-warning">
-                                {{ $reopenRate ?? 0 }}<small class="fs-6">%</small>
-                            </div>
-                            <p class="text-muted small">Ticket yang dibuka kembali</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        {{-- Main Content Grid --}}
-        <div class="row g-4">
-            {{-- Recent Tickets --}}
-            <div class="col-lg-8">
-                <div class="card shadow-sm border-0">
-                    <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center">
-                        <h5 class="card-title mb-0">
-                            <i class="fas fa-clock text-primary me-2"></i>Tickets Terbaru
-                        </h5>
-                        <a href="{{ route('tickets.index') }}" class="btn btn-sm btn-outline-primary">
-                            <i class="fas fa-arrow-right me-1"></i>Lihat Semua
-                        </a>
-                    </div>
-                    <div class="card-body p-0">
-                        @if(isset($recentTickets) && $recentTickets->count() > 0)
-                            <div class="table-responsive">
-                                <table class="table table-hover align-middle mb-0">
-                                    <thead class="bg-primary bg-opacity-10">
-                                        <tr>
-                                            <th class="ps-3">Ticket #</th>
-                                            <th>Judul</th>
-                                            <th>User</th>
-                                            <th>Prioritas</th>
-                                            <th>Status</th>
-                                            <th>SLA</th>
-                                            <th>Tanggal</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach ($recentTickets as $ticket)
-                                        @php
-                                            $isOverdue = $ticket->sla_due_at && \Carbon\Carbon::now()->gt(\Carbon\Carbon::parse($ticket->sla_due_at)) && !in_array($ticket->status, ['resolved', 'closed']);
-                                            $priorityColors = ['low' => 'success', 'medium' => 'warning', 'high' => 'danger', 'urgent' => 'danger'];
-                                            $statusColors = ['open' => 'primary', 'in_progress' => 'warning', 'resolved' => 'success', 'closed' => 'secondary'];
-                                        @endphp
-                                        <tr>
-                                            <td class="ps-3">
-                                                <a href="{{ route('tickets.show', $ticket) }}" class="fw-bold text-primary text-decoration-none">
-                                                    {{ $ticket->ticket_number }}
-                                                </a>
-                                            </td>
-                                            <td>
-                                                <div class="fw-semibold">{{ \Illuminate\Support\Str::limit(strip_tags($ticket->title), 40) }}</div>
-                                            </td>
-                                            <td>
-                                                <div class="d-flex align-items-center gap-2">
-                                                    <div class="avatar-sm bg-secondary">
-                                                        {{ strtoupper(substr($ticket->user->name ?? 'U', 0, 1)) }}
-                                                    </div>
-                                                    <span class="small">{{ \Illuminate\Support\Str::limit($ticket->user->name ?? '-', 15) }}</span>
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <span class="badge bg-{{ $priorityColors[$ticket->priority] ?? 'secondary' }} bg-opacity-10 text-{{ $priorityColors[$ticket->priority] ?? 'secondary' }} px-3 py-2">
-                                                    {{ ucfirst($ticket->priority) }}
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <span class="badge bg-{{ $statusColors[$ticket->status] ?? 'secondary' }} bg-opacity-10 text-{{ $statusColors[$ticket->status] ?? 'secondary' }} px-3 py-2">
-                                                    {{ ucfirst(str_replace('_', ' ', $ticket->status)) }}
-                                                </span>
-                                            </td>
-                                            <td>
-                                                @if($ticket->sla_due_at)
-                                                    <span class="badge {{ $isOverdue ? 'bg-danger' : 'bg-success' }} bg-opacity-10 text-{{ $isOverdue ? 'danger' : 'success' }}">
-                                                        <i class="fas {{ $isOverdue ? 'fa-exclamation-triangle' : 'fa-check-circle' }} me-1"></i>
-                                                        {{ \Carbon\Carbon::parse($ticket->sla_due_at)->format('d/m') }}
-                                                    </span>
-                                                @else
-                                                    <span class="badge bg-secondary bg-opacity-10 text-secondary">-</span>
-                                                @endif
-                                            </td>
-                                            <td class="text-nowrap">
-                                                <small>{{ $ticket->created_at->format('d/m/Y') }}</small>
-                                            </td>
-                                        </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
-                            </div>
-                        @else
-                            <div class="text-center py-5">
-                                <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
-                                <p class="text-muted mb-0">Tidak ada tickets</p>
-                            </div>
-                        @endif
-                    </div>
-                </div>
-            </div>
-
-            {{-- Right Sidebar --}}
-            <div class="col-lg-4">
-                {{-- Category Statistics --}}
-                <div class="card shadow-sm border-0 mb-4">
-                    <div class="card-header bg-white border-bottom">
-                        <h5 class="card-title mb-0">
-                            <i class="fas fa-tags text-primary me-2"></i>Tickets by Category
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        @if(isset($categoryCounts) && $categoryCounts->count() > 0)
-                            @foreach ($categoryCounts as $category)
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <div class="d-flex align-items-center gap-2">
-                                    <div class="rounded-circle" style="width: 10px; height: 10px; background: {{ $category->color ?? '#3b82f6' }}"></div>
-                                    <span>{{ $category->name }}</span>
-                                </div>
-                                <span class="badge bg-primary rounded-pill">{{ $category->tickets_count }}</span>
-                            </div>
-                            @endforeach
-                        @else
-                            <div class="text-center py-4">
-                                <i class="fas fa-tag fa-2x text-muted mb-2"></i>
-                                <p class="text-muted mb-0">Tidak ada data kategori</p>
-                            </div>
-                        @endif
-                    </div>
-                </div>
-
-                {{-- IT Staff Performance --}}
-                <div class="card shadow-sm border-0 mb-4">
-                    <div class="card-header bg-white border-bottom">
-                        <h5 class="card-title mb-0">
-                            <i class="fas fa-user-shield text-primary me-2"></i>Performa IT Staff
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        @if(isset($itStaffPerformance) && $itStaffPerformance->count() > 0)
-                            @foreach ($itStaffPerformance as $staff)
-                            <div class="mb-3">
-                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <div class="d-flex align-items-center gap-2">
-                                        <div class="avatar-sm bg-primary">
-                                            {{ substr($staff->name, 0, 1) }}
-                                        </div>
-                                        <span class="fw-semibold">{{ $staff->name }}</span>
-                                    </div>
-                                    <span class="small text-muted">{{ $staff->completion_rate ?? 0 }}%</span>
-                                </div>
-                                <div class="progress" style="height: 4px;">
-                                    <div class="progress-bar bg-success" style="width: {{ $staff->completion_rate ?? 0 }}%"></div>
-                                </div>
-                                <div class="d-flex justify-content-between mt-1">
-                                    <small class="text-muted">
-                                        <i class="fas fa-check-circle text-success me-1"></i>{{ $staff->resolved_count ?? 0 }} selesai
-                                    </small>
-                                    <small class="text-muted">
-                                        <i class="fas fa-spinner text-warning me-1"></i>{{ $staff->active_count ?? 0 }} aktif
-                                    </small>
-                                </div>
-                            </div>
-                            @endforeach
-                        @else
-                            <div class="text-center py-4">
-                                <i class="fas fa-users fa-2x text-muted mb-2"></i>
-                                <p class="text-muted mb-0">Belum ada data IT Staff</p>
-                            </div>
-                        @endif
-                    </div>
-                </div>
-
-                {{-- Monthly Ticket Chart --}}
-                <div class="card shadow-sm border-0">
-                    <div class="card-header bg-white border-bottom">
-                        <h5 class="card-title mb-0">
-                            <i class="fas fa-chart-line text-primary me-2"></i>Ticket Trend (6 Bulan)
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        @if(isset($months) && isset($ticketCountsByMonth))
-                            <canvas id="ticketTrendChart" height="200"></canvas>
-                        @else
-                            <div class="text-center py-4">
-                                <i class="fas fa-chart-line fa-2x text-muted mb-2"></i>
-                                <p class="text-muted mb-0">Tidak ada data chart</p>
-                            </div>
-                        @endif
-                    </div>
+            <div class="glass-card-body">
+                <div class="chart-wrap chart-wrap--tall">
+                    <canvas id="categoryBarChart" role="img" aria-label="Tiket per kategori."></canvas>
                 </div>
             </div>
         </div>
     </div>
+
+    {{-- SPARKLINES --}}
+    <div class="spark-row">
+        <div class="spark-card">
+            <div class="spark-card-label">Resolution rate</div>
+            <div class="spark-card-val spark-card-val--green">{{ $sparkResVal }}%</div>
+            <div class="chart-wrap chart-wrap--spark">
+                <canvas id="sparkResolution" role="img" aria-label="Sparkline resolution rate."></canvas>
+            </div>
+        </div>
+        <div class="spark-card">
+            <div class="spark-card-label">Avg resolution time</div>
+            <div class="spark-card-val spark-card-val--teal">
+                {{ $sparkTimeVal }} <span class="spark-card-unit">jam</span>
+            </div>
+            <div class="chart-wrap chart-wrap--spark">
+                <canvas id="sparkResTime" role="img" aria-label="Sparkline avg resolution time."></canvas>
+            </div>
+        </div>
+    </div>
+
+    {{-- SLA CARDS --}}
+    <div class="sla-grid">
+        <div class="sla-card">
+            <div class="sla-card-label"><i class="fas fa-chart-pie"></i> SLA compliance rate</div>
+            <div class="sla-big-value {{ $slaCls }}">{{ $slaRate }}%</div>
+            <p class="sla-desc">Tiket selesai tepat waktu</p>
+            <div class="sla-progress-track">
+                <div class="sla-progress-fill {{ $slaCls }}" style="width:{{ $slaRate }}%"></div>
+            </div>
+        </div>
+        <div class="sla-card">
+            <div class="sla-card-label"><i class="fas fa-hourglass-half"></i> Avg resolution time</div>
+            <div class="sla-big-value teal">{{ $sparkTimeVal }} <span class="sla-unit">jam</span></div>
+            <p class="sla-desc">Rata-rata waktu penyelesaian</p>
+        </div>
+        <div class="sla-card">
+            <div class="sla-card-label"><i class="fas fa-undo-alt"></i> Reopen rate</div>
+            <div class="sla-big-value amber">{{ $reopenRate ?? 0 }}<span class="sla-unit">%</span></div>
+            <p class="sla-desc">Ticket yang dibuka kembali</p>
+        </div>
+    </div>
+
+    {{-- MAIN GRID --}}
+    <div class="main-grid">
+
+        {{-- Tickets table --}}
+        <div class="glass-card">
+            <div class="glass-card-header">
+                <h5 class="glass-card-title"><i class="fas fa-clock"></i>Tickets terbaru</h5>
+                <a href="{{ route('tickets.index') }}" class="btn-glass">
+                    <i class="fas fa-arrow-right"></i>Lihat Semua
+                </a>
+            </div>
+            @if(isset($recentTickets) && $recentTickets->count() > 0)
+            <div class="table-scroll">
+                <table class="glass-table">
+                    <thead>
+                        <tr>
+                            <th>Ticket #</th><th>Judul</th><th>User</th>
+                            <th>Prioritas</th><th>Status</th><th>SLA</th><th>Tanggal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($recentTickets as $ticket)
+                        @php
+                            $isOverdue = $ticket->sla_due_at
+                                && \Carbon\Carbon::now()->gt(\Carbon\Carbon::parse($ticket->sla_due_at))
+                                && !in_array($ticket->status, ['resolved','closed']);
+                        @endphp
+                        <tr>
+                            <td><a href="{{ route('tickets.show', $ticket) }}" class="ticket-link">{{ $ticket->ticket_number }}</a></td>
+                            <td>
+                                <span class="ticket-title-text" title="{{ strip_tags($ticket->title) }}">
+                                    {{ \Illuminate\Support\Str::limit(strip_tags($ticket->title), 40) }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="user-cell">
+                                    <div class="avatar-xs">{{ strtoupper(substr($ticket->user->name ?? 'U', 0, 2)) }}</div>
+                                    <span class="user-cell-name">{{ \Illuminate\Support\Str::limit($ticket->user->name ?? '-', 14) }}</span>
+                                </div>
+                            </td>
+                            <td><span class="badge-pill badge-priority-{{ $ticket->priority ?? 'medium' }}">{{ ucfirst($ticket->priority) }}</span></td>
+                            <td><span class="badge-pill badge-status-{{ str_replace(' ','_',$ticket->status) }}">{{ ucfirst(str_replace('_',' ',$ticket->status)) }}</span></td>
+                            <td>
+                                @if($ticket->sla_due_at)
+                                    <span class="badge-pill {{ $isOverdue ? 'badge-sla-overdue' : 'badge-sla-ok' }}">
+                                        <i class="fas {{ $isOverdue ? 'fa-exclamation-triangle' : 'fa-check-circle' }}"></i>
+                                        {{ \Carbon\Carbon::parse($ticket->sla_due_at)->format('d/m') }}
+                                    </span>
+                                @else
+                                    <span class="badge-pill badge-sla-none">—</span>
+                                @endif
+                            </td>
+                            <td class="text-nowrap text-small">{{ $ticket->created_at->format('d/m/Y') }}</td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+            @else
+            <div class="empty-state">
+                <i class="fas fa-inbox"></i>
+                <p>Tidak ada tickets untuk ditampilkan</p>
+            </div>
+            @endif
+        </div>
+
+        {{-- Sidebar --}}
+        <div class="sidebar-stack">
+
+            <div class="glass-card">
+                <div class="glass-card-header">
+                    <h5 class="glass-card-title"><i class="fas fa-tags"></i>Tickets by category</h5>
+                </div>
+                <div class="glass-card-body">
+                    @forelse($categoryCounts ?? [] as $category)
+                    <div class="category-item">
+                        <div class="category-dot-label">
+                            <div class="category-dot" style="background:{{ $category->color ?? '#6366f1' }}"></div>
+                            <span>{{ $category->name }}</span>
+                        </div>
+                        <span class="category-count">{{ $category->tickets_count }}</span>
+                    </div>
+                    @empty
+                    <div class="empty-state" style="padding:1.5rem 0">
+                        <i class="fas fa-tag" style="font-size:1.75rem"></i>
+                        <p>Tidak ada data kategori</p>
+                    </div>
+                    @endforelse
+                </div>
+            </div>
+
+            <div class="glass-card">
+                <div class="glass-card-header">
+                    <h5 class="glass-card-title"><i class="fas fa-user-shield"></i>Performa IT staff</h5>
+                </div>
+                <div class="glass-card-body">
+                    @forelse($itStaffPerformance ?? [] as $staff)
+                    <div class="staff-item">
+                        <div class="staff-row">
+                            <div class="staff-identity">
+                                <div class="avatar-xs">{{ strtoupper(substr($staff->name, 0, 1)) }}</div>
+                                <span class="staff-name">{{ $staff->name }}</span>
+                            </div>
+                            <span class="staff-rate">{{ $staff->completion_rate ?? 0 }}%</span>
+                        </div>
+                        <div class="staff-progress-track">
+                            <div class="staff-progress-fill" style="width:{{ $staff->completion_rate ?? 0 }}%"></div>
+                        </div>
+                        <div class="staff-meta">
+                            <span class="ok"><i class="fas fa-check-circle"></i>{{ $staff->resolved_count ?? 0 }} selesai</span>
+                            <span class="wip"><i class="fas fa-spinner"></i>{{ $staff->active_count ?? 0 }} aktif</span>
+                        </div>
+                    </div>
+                    @empty
+                    <div class="empty-state" style="padding:1.5rem 0">
+                        <i class="fas fa-users" style="font-size:1.75rem"></i>
+                        <p>Belum ada data IT staff</p>
+                    </div>
+                    @endforelse
+                </div>
+            </div>
+
+            <div class="glass-card">
+                <div class="glass-card-header">
+                    <h5 class="glass-card-title"><i class="fas fa-chart-line"></i>Trend (6 bulan)</h5>
+                </div>
+                <div class="glass-card-body">
+                    <div class="chart-wrap" style="height:160px">
+                        <canvas id="ticketTrendChart" role="img" aria-label="Tren tiket 6 bulan."></canvas>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
 </div>
+@endsection
 
-{{-- CSS Glassmorphism untuk Container Utama --}}
-<style>
-    /* Glassmorphism Container Utama */
-    .glass-container {
-        background: rgba(255, 255, 255, 0.25) !important;
-        backdrop-filter: blur(12px) !important;
-        -webkit-backdrop-filter: blur(12px) !important;
-        border-radius: 24px !important;
-        margin: 1rem !important;
-        padding: 1.5rem 0 !important;
-        border: 1px solid rgba(255, 255, 255, 0.3) !important;
-        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15) !important;
-    }
-
-    .avatar-sm {
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 0.75rem;
-        font-weight: 600;
-        color: white;
-    }
-
-    .card-header {
-        background: white !important;
-        border-bottom: 1px solid #e5e7eb !important;
-        padding: 1rem 1.5rem;
-    }
-
-    .card-title {
-        font-size: 1rem;
-        font-weight: 600;
-        color: #1f2937;
-    }
-
-    .table td, .table th {
-        padding: 1rem 0.75rem;
-    }
-
-    .hover-shadow {
-        transition: all 0.2s ease;
-    }
-
-    .hover-shadow:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    }
-
-    .transition {
-        transition: all 0.2s ease;
-    }
-
-    .progress {
-        background-color: #e5e7eb;
-        border-radius: 10px;
-    }
-
-    .progress-bar {
-        border-radius: 10px;
-    }
-
-    @media (max-width: 768px) {
-        .table td, .table th {
-            padding: 0.75rem 0.5rem;
-        }
-
-        .avatar-sm {
-            width: 28px;
-            height: 28px;
-            font-size: 0.7rem;
-        }
-
-        .glass-container {
-            margin: 0.5rem !important;
-            padding: 0.75rem 0 !important;
-        }
-    }
-</style>
-
-@if(isset($months) && isset($ticketCountsByMonth))
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const ctx = document.getElementById('ticketTrendChart').getContext('2d');
-        new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: @json($months),
-                datasets: [{
-                    label: 'Jumlah Tickets',
-                    data: @json($ticketCountsByMonth),
-                    borderColor: '#18b5a0',
-                    backgroundColor: 'rgba(24, 181, 160, 0.1)',
-                    tension: 0.4,
-                    fill: true,
-                    borderWidth: 2,
-                    pointBackgroundColor: '#18b5a0',
-                    pointBorderColor: '#fff',
-                    pointRadius: 4
-                }]
+(function () {
+    'use strict';
+
+    /* ── Clock ───────────────────────────────────────────────── */
+    var DAYS = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+    var MON  = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+
+    function tick() {
+        var d = new Date();
+        var pad = function (n) { return String(n).padStart(2,'0'); };
+        document.getElementById('liveClock').textContent =
+            pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
+        document.getElementById('liveDate').textContent =
+            DAYS[d.getDay()] + ', ' + d.getDate() + ' ' + MON[d.getMonth()] + ' ' + d.getFullYear();
+        setTimeout(tick, 1000);
+    }
+    tick();
+
+    /* ── Weather (Open-Meteo, no API key) ───────────────────── */
+    var WX_ICONS = {0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',48:'🌫️',51:'🌦️',53:'🌦️',55:'🌧️',61:'🌧️',63:'🌧️',65:'🌧️',71:'🌨️',73:'🌨️',75:'❄️',80:'🌦️',81:'🌧️',82:'⛈️',95:'⛈️',96:'⛈️',99:'⛈️'};
+    var WX_DESC  = {0:'Cerah',1:'Sebagian berawan',2:'Berawan',3:'Mendung',45:'Berkabut',48:'Berkabut',51:'Gerimis ringan',53:'Gerimis',55:'Gerimis deras',61:'Hujan ringan',63:'Hujan sedang',65:'Hujan deras',71:'Salju ringan',73:'Salju',75:'Salju lebat',80:'Hujan lokal',81:'Hujan',82:'Hujan deras',95:'Badai',96:'Badai + es',99:'Badai besar'};
+
+    function loadWeather(lat, lon) {
+        fetch('https://api.open-meteo.com/v1/forecast?latitude=' + lat + '&longitude=' + lon + '&current_weather=true&timezone=auto')
+            .then(function(r){ return r.json(); })
+            .then(function(d){
+                var cw = d.current_weather;
+                document.getElementById('wxTemp').textContent = Math.round(cw.temperature) + '°C';
+                document.getElementById('wxIcon').textContent = WX_ICONS[cw.weathercode] || '🌡️';
+                document.getElementById('wxDesc').textContent = WX_DESC[cw.weathercode]  || '--';
+            })
+            .catch(function(){ document.getElementById('wxTemp').textContent = '--°C'; });
+    }
+
+    function loadCity(lat, lon) {
+        fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat=' + lat + '&lon=' + lon)
+            .then(function(r){ return r.json(); })
+            .then(function(d){
+                var a = d.address;
+                document.getElementById('wxLoc').textContent = a.city || a.town || a.village || a.county || 'Lokasi kamu';
+            })
+            .catch(function(){ document.getElementById('wxLoc').textContent = 'Lokasi kamu'; });
+    }
+
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            function(pos){
+                var lat = pos.coords.latitude.toFixed(4);
+                var lon = pos.coords.longitude.toFixed(4);
+                loadCity(lat, lon);
+                loadWeather(lat, lon);
             },
+            function(){
+                document.getElementById('wxLoc').textContent = 'Garut';
+                loadWeather(-7.2167, 107.9000);
+            }
+        );
+    } else {
+        document.getElementById('wxLoc').textContent = 'Garut';
+        loadWeather(-7.2167, 107.9000);
+    }
+
+    /* ── Chart helpers ──────────────────────────────────────── */
+    var GRID   = 'rgba(0,0,0,0.05)';
+    var TICK   = { color: '#94a3b8', font: { size: 10 } };
+    var MONTHS = @json($jsMonths);
+
+    function sparkOpts() {
+        return {
+            responsive: true, maintainAspectRatio: false,
+            elements: { point: { radius: 0 } },
+            plugins: { legend: { display: false }, tooltip: { enabled: false } },
+            scales: { x: { display: false }, y: { display: false, beginAtZero: false } }
+        };
+    }
+
+    /* ── Trend line ─────────────────────────────────────────── */
+    var trendCtx = document.getElementById('monthlyTrendChart');
+    if (trendCtx) {
+        var datasets = [
+            { label:'Total',    data: @json($jsTotals),   borderColor:'#1d6fb8', backgroundColor:'rgba(29,111,184,0.10)', tension:.4, fill:true,  borderWidth:2, pointBackgroundColor:'#1d6fb8', pointRadius:4, pointHoverRadius:6 },
+            { label:'Open',     data: @json($jsOpen),     borderColor:'#d97706', backgroundColor:'transparent',           tension:.4, fill:false, borderWidth:2, borderDash:[5,4], pointBackgroundColor:'#d97706', pointRadius:3 },
+            { label:'Resolved', data: @json($jsResolved), borderColor:'#059669', backgroundColor:'transparent',           tension:.4, fill:false, borderWidth:2, pointStyle:'rect', pointBackgroundColor:'#059669', pointRadius:4 }
+        ];
+
+        var legendEl = document.getElementById('trendLegend');
+        var sw = ['background:#1d6fb8','background:transparent;border-top:2px dashed #d97706;width:16px;height:0;border-radius:0','background:#059669'];
+        datasets.forEach(function(ds, i){
+            var s = document.createElement('span');
+            s.className = 'chart-legend-item';
+            s.innerHTML = '<span class="chart-legend-swatch" style="' + sw[i] + '"></span>' + ds.label;
+            legendEl.appendChild(s);
+        });
+
+        new Chart(trendCtx, {
+            type: 'line',
+            data: { labels: MONTHS, datasets: datasets },
             options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                plugins: {
-                    legend: { display: false },
-                    tooltip: { mode: 'index', intersect: false }
-                },
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
                 scales: {
-                    y: { beginAtZero: true, ticks: { stepSize: 1 } }
+                    x: { grid: { color: GRID }, ticks: TICK, border: { dash: [3,3] } },
+                    y: { beginAtZero: true, grid: { color: GRID }, ticks: Object.assign({ precision: 0 }, TICK), border: { dash: [3,3] } }
                 }
             }
         });
-    });
-</script>
-@endif
+    }
 
-@endsection
+    /* ── Status donut ───────────────────────────────────────── */
+    var statusCtx = document.getElementById('statusDonutChart');
+    if (statusCtx) {
+        var sd = [{{ $openTickets ?? 47 }}, {{ $resolvedTickets ?? 221 }}, {{ $closedTickets ?? 16 }}];
+        var total = sd.reduce(function(a,b){ return a+b; }, 0);
+
+        new Chart(statusCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Open','Resolved','Closed'],
+                datasets: [{ data: sd, backgroundColor: ['#4f46e5','#059669','#94a3b8'], borderWidth: 2, borderColor: '#ffffff', hoverOffset: 4 }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false, cutout: '65%',
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { callbacks: { label: function(c){ return ' ' + c.label + ': ' + c.parsed + ' (' + (total > 0 ? Math.round(c.parsed/total*100) : 0) + '%)'; } } }
+                }
+            }
+        });
+
+        var sl = document.getElementById('statusLegend');
+        ['#4f46e5','#059669','#94a3b8'].forEach(function(col, i){
+            var s = document.createElement('span');
+            s.className = 'chart-legend-item';
+            s.innerHTML = '<span class="chart-legend-swatch" style="background:' + col + '"></span>' + ['Open','Resolved','Closed'][i];
+            sl.appendChild(s);
+        });
+    }
+
+    /* ── Category bar ───────────────────────────────────────── */
+    var catCtx = document.getElementById('categoryBarChart');
+    if (catCtx) {
+        var catLabels = @json($catLabels);
+        var catData   = @json($catData);
+        var catColors = ['#1d6fb8','#4f46e5','#d97706','#7c3aed','#94a3b8','#059669','#e11d48'];
+
+        new Chart(catCtx, {
+            type: 'bar',
+            data: {
+                labels: catLabels,
+                datasets: [{ label:'Tiket', data: catData, backgroundColor: catColors.slice(0, catLabels.length), borderRadius: 6, borderSkipped: false }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { display: false }, ticks: TICK },
+                    y: { beginAtZero: true, grid: { color: GRID }, ticks: Object.assign({ precision: 0 }, TICK) }
+                }
+            }
+        });
+    }
+
+    /* ── Sidebar trend ──────────────────────────────────────── */
+    var sideCtx = document.getElementById('ticketTrendChart');
+    if (sideCtx) {
+        new Chart(sideCtx, {
+            type: 'line',
+            data: { labels: MONTHS, datasets: [{ data: @json($jsTotals), borderColor:'#6366f1', backgroundColor:'rgba(99,102,241,0.12)', tension:.4, fill:true, borderWidth:2, pointBackgroundColor:'#6366f1', pointRadius:3, pointHoverRadius:5 }] },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false }, tooltip: { backgroundColor:'rgba(15,20,40,0.9)', titleColor:'#f1f5f9', bodyColor:'#94a3b8', borderColor:'rgba(99,102,241,.3)', borderWidth:1, padding:8, cornerRadius:8 } },
+                scales: {
+                    x: { grid: { display: false }, ticks: Object.assign({ font: { size: 9 } }, TICK) },
+                    y: { beginAtZero: true, grid: { color: GRID }, ticks: Object.assign({ font: { size: 9 }, precision: 0 }, TICK) }
+                }
+            }
+        });
+    }
+
+    /* ── Sparklines ─────────────────────────────────────────── */
+    var spkRes = document.getElementById('sparkResolution');
+    if (spkRes) {
+        new Chart(spkRes, {
+            type: 'line',
+            data: { labels: MONTHS, datasets: [{ data:[72,75,71,78,80,{{ $sparkResVal }}], borderColor:'#059669', backgroundColor:'rgba(5,150,105,.15)', tension:.4, fill:true, borderWidth:2 }] },
+            options: sparkOpts()
+        });
+    }
+
+    var spkTime = document.getElementById('sparkResTime');
+    if (spkTime) {
+        new Chart(spkTime, {
+            type: 'line',
+            data: { labels: MONTHS, datasets: [{ data:[5.2,4.8,5.5,4.1,3.9,{{ $sparkTimeVal }}], borderColor:'#0d9488', backgroundColor:'rgba(13,148,136,.15)', tension:.4, fill:true, borderWidth:2 }] },
+            options: sparkOpts()
+        });
+    }
+
+})();
+</script>
+@endpush

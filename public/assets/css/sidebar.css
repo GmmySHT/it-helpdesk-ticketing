@@ -4,13 +4,13 @@
     --sidebar-collapsed: 100px;
 
     /* Glassmorph Sidebar Colors */
-    --sidebar-glass-bg: rgba(30, 61, 111, 0.85);
+    --sidebar-glass-bg: rgba(30, 61, 111, 0.534);
     --sidebar-glass-blur: blur(12px);
     --sidebar-glass-border: rgba(255, 255, 255, 0.15);
 
     /* Gradient Sidebar (opsional) */
-    --sidebar-gradient: linear-gradient(135deg, #1e3d6f 0%, #0a2a4a 100%);
-    --sidebar-gradient-glass: linear-gradient(135deg, rgba(30, 61, 111, 0.9), rgba(10, 42, 74, 0.9));
+    --sidebar-gradient: linear-gradient(135deg, #1e3d6f 0%, #0a2a4a5e 100%);
+    --sidebar-gradient-glass: linear-gradient(135deg, rgba(30, 61, 111, 0.726), rgba(10, 42, 74, 0.137));
 
     --sidebar-color: rgba(255, 255, 255, 0.8);
     --sidebar-hover: rgba(255, 255, 255, 0.1);

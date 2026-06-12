@@ -75,10 +75,10 @@
                                 <i class="fas fa-envelope me-2 text-primary"></i>
                                 <span>shtgmmy@gmail.com</span>
                             </li>
-                            <li>
+                            {{-- <li>
                                 <i class="fas fa-clock me-2 text-primary"></i>
                                 <span>Senin - Jumat: 08:00 - 17:00</span>
-                            </li>
+                            </li> --}}
                         </ul>
                     </div>
                 </div>
@@ -86,7 +86,7 @@
         </div>
 
         <!-- Newsletter Section -->
-        <div class="footer-newsletter">
+        {{-- <div class="footer-newsletter">
             <div class="row align-items-center">
                 <div class="col-lg-6">
                     <div class="newsletter-text">
@@ -105,7 +105,7 @@
                     </div>
                 </div>
             </div>
-        </div>
+        </div> --}}
 
         <!-- Copyright Bar -->
         <div class="footer-copyright">

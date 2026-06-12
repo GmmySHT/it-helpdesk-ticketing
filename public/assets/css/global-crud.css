@@ -1,8 +1,8 @@
 /* ===== GLOBAL CRUD VARIABLES ===== */
 :root {
-    --primary: #2c5aa0;
-    --primary-dark: #1e3d6f;
-    --primary-light: #4a7bc8;
+    --primary: #0a4174;
+    --primary-dark: #001D39;
+    --primary-light: #49769F;
     --secondary: #6c757d;
     --success: #28a745;
     --warning: #ffc107;
@@ -11,7 +11,7 @@
     --dark: #343a40;
     --light: #f8f9fa;
     --white: #ffffff;
-    
+
     --gray-100: #f8f9fa;
     --gray-200: #e9ecef;
     --gray-300: #dee2e6;
@@ -21,7 +21,7 @@
     --gray-700: #495057;
     --gray-800: #343a40;
     --gray-900: #212529;
-    
+
     --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
     --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
     --shadow-lg: 0 10px 25px rgba(0,0,0,0.1);
@@ -549,26 +549,26 @@
         align-items: flex-start;
         gap: 1rem;
     }
-    
+
     .page-actions {
         width: 100%;
         justify-content: flex-start;
     }
-    
+
     .table th,
     .table td {
         padding: 0.75rem 0.5rem;
     }
-    
+
     .action-buttons {
         flex-direction: column;
         gap: 0.25rem;
     }
-    
+
     .filters-row {
         grid-template-columns: 1fr;
     }
-    
+
     .modal {
         width: 95%;
         margin: 1rem;

@@ -211,3 +211,992 @@
         font-size: 0.7rem;
     }
 }
+
+/* ============================================================
+   tickets-index.css
+   Styles untuk halaman Semua Ticket (tickets/index.blade.php)
+   Design System: Clean Card + Soft Blue Accent
+   ============================================================ */
+
+:root {
+    --tk-accent-primary:   #1d6fb8;
+    --tk-accent-secondary: #2e8fcf;
+    --tk-accent-teal:      #0d9488;
+    --tk-accent-amber:     #d97706;
+    --tk-accent-rose:      #e11d48;
+    --tk-accent-emerald:   #059669;
+    --tk-accent-indigo:    #4f46e5;
+
+    --tk-text-primary:     #0f172a;
+    --tk-text-secondary:   #475569;
+    --tk-text-muted:       #94a3b8;
+
+    --tk-border:           #e2e8f0;
+    --tk-border-strong:    #cbd5e1;
+    --tk-surface:          #ffffff;
+    --tk-surface-2:        #f8fafc;
+
+    --tk-shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --tk-shadow-md: 0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.05);
+
+    --tk-radius-sm: 8px;
+    --tk-radius-md: 12px;
+    --tk-radius-lg: 16px;
+    --tk-radius-xl: 22px;
+    --tk-radius-full: 9999px;
+}
+
+/* ----------------------------------------------------------
+   1. Page Header — Glass-on-blue gradient
+   ---------------------------------------------------------- */
+.tk-page-header {
+    background: linear-gradient(135deg, rgba(29, 111, 184, 0.92) 0%, rgba(10, 40, 90, 0.95) 100%);
+    border-radius: var(--tk-radius-xl);
+    padding: 1.85rem 2.25rem;
+    margin-bottom: 1.5rem;
+    position: relative;
+    overflow: hidden;
+    box-shadow: var(--tk-shadow-md);
+}
+
+.tk-page-header::before {
+    content: '';
+    position: absolute;
+    right: -60px;
+    top: -60px;
+    width: 220px;
+    height: 220px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.06);
+    pointer-events: none;
+}
+
+.tk-page-header::after {
+    content: '';
+    position: absolute;
+    right: 80px;
+    bottom: -90px;
+    width: 160px;
+    height: 160px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.05);
+    pointer-events: none;
+}
+
+.tk-page-title {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: #ffffff;
+    letter-spacing: -0.02em;
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    margin: 0;
+}
+
+.tk-page-title i {
+    color: rgba(255,255,255,0.75);
+    font-size: 1.35rem;
+}
+
+.tk-page-subtitle {
+    color: rgba(255,255,255,0.62);
+    font-size: 0.85rem;
+    margin: 0.35rem 0 0;
+}
+
+.tk-page-subtitle .badge-readonly {
+    background: rgba(255,255,255,0.16);
+    color: #fff;
+    border: 1px solid rgba(255,255,255,0.25);
+    border-radius: var(--tk-radius-full);
+    padding: 0.15rem 0.65rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    margin-right: 0.5rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.tk-btn-header {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.55rem 1.25rem;
+    border-radius: var(--tk-radius-full);
+    font-size: 0.825rem;
+    font-weight: 600;
+    color: #ffffff;
+    background: rgba(255,255,255,0.14);
+    border: 1px solid rgba(255,255,255,0.25);
+    text-decoration: none;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.tk-btn-header:hover {
+    background: rgba(255,255,255,0.24);
+    color: #fff;
+    transform: translateY(-1px);
+}
+
+/* ----------------------------------------------------------
+   2. Info Alert — Soft card style
+   ---------------------------------------------------------- */
+.tk-alert {
+    background: #e6f1fb;
+    border: 1px solid #b5d4f4;
+    border-radius: var(--tk-radius-lg);
+    padding: 0.95rem 1.25rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.85rem;
+    color: var(--tk-text-secondary);
+    font-size: 0.85rem;
+    position: relative;
+}
+
+.tk-alert-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: var(--tk-radius-sm);
+    background: rgba(29, 111, 184, 0.12);
+    color: var(--tk-accent-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+.tk-alert strong {
+    color: var(--tk-text-primary);
+}
+
+.tk-alert .btn-close {
+    margin-left: auto;
+    align-self: center;
+    flex-shrink: 0;
+}
+
+/* ----------------------------------------------------------
+   3. Filter Card
+   ---------------------------------------------------------- */
+.tk-filter-card {
+    background: var(--tk-surface);
+    border: 1px solid var(--tk-border);
+    border-radius: var(--tk-radius-lg);
+    box-shadow: var(--tk-shadow-sm);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.tk-filter-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--tk-accent-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.tk-filter-label i {
+    font-size: 0.75rem;
+}
+
+.tk-input,
+.tk-select {
+    width: 100%;
+    border: 1.5px solid var(--tk-border);
+    border-radius: var(--tk-radius-md);
+    padding: 0.55rem 0.85rem;
+    font-size: 0.875rem;
+    color: var(--tk-text-primary);
+    background: var(--tk-surface-2);
+    transition: all 0.2s ease;
+}
+
+.tk-input:focus,
+.tk-select:focus {
+    outline: none;
+    border-color: var(--tk-accent-primary);
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(29, 111, 184, 0.10);
+}
+
+.tk-input-group {
+    position: relative;
+}
+
+.tk-input-group i {
+    position: absolute;
+    left: 0.85rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--tk-text-muted);
+    font-size: 0.8rem;
+    pointer-events: none;
+}
+
+.tk-input-group .tk-input {
+    padding-left: 2.25rem;
+}
+
+.tk-btn-filter {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1.4rem;
+    border-radius: var(--tk-radius-md);
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #fff;
+    background: var(--tk-accent-primary);
+    border: 1px solid var(--tk-accent-primary);
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.tk-btn-filter:hover {
+    background: var(--tk-accent-secondary);
+    border-color: var(--tk-accent-secondary);
+    color: #fff;
+    transform: translateY(-1px);
+    box-shadow: var(--tk-shadow-sm);
+}
+
+.tk-btn-reset {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1.4rem;
+    border-radius: var(--tk-radius-md);
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--tk-accent-primary);
+    background: #fff;
+    border: 1.5px solid var(--tk-border);
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.tk-btn-reset:hover {
+    border-color: var(--tk-accent-primary);
+    background: #f0f7ff;
+    color: var(--tk-accent-primary);
+    transform: translateY(-1px);
+}
+
+/* ----------------------------------------------------------
+   4. Main Table Card
+   ---------------------------------------------------------- */
+.tk-table-card {
+    background: var(--tk-surface);
+    border: 1px solid var(--tk-border);
+    border-radius: var(--tk-radius-lg);
+    box-shadow: var(--tk-shadow-sm);
+    overflow: hidden;
+}
+
+.tk-table-card .card-header {
+    background: var(--tk-surface-2) !important;
+    border-bottom: 1px solid var(--tk-border);
+    padding: 1rem 1.5rem;
+}
+
+.tk-table-card .card-title {
+    font-size: 0.9375rem;
+    font-weight: 700;
+    color: var(--tk-text-primary);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+}
+
+.tk-table-card .card-title i {
+    color: var(--tk-accent-primary);
+}
+
+/* ----------------------------------------------------------
+   5. Table
+   ---------------------------------------------------------- */
+.tk-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.tk-table thead th {
+    background: var(--tk-surface-2);
+    color: var(--tk-text-muted);
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 0.85rem 0.75rem;
+    border-bottom: 1px solid var(--tk-border);
+    white-space: nowrap;
+}
+
+.tk-table thead th:first-child { padding-left: 1.5rem; }
+.tk-table thead th:last-child  { padding-right: 1.5rem; text-align: center; }
+
+.tk-table tbody td {
+    padding: 0.85rem 0.75rem;
+    font-size: 0.85rem;
+    vertical-align: middle;
+    color: var(--tk-text-primary);
+    border-bottom: 1px solid var(--tk-border);
+}
+
+.tk-table tbody td:first-child { padding-left: 1.5rem; }
+.tk-table tbody td:last-child  { padding-right: 1.5rem; }
+
+.tk-table tbody tr {
+    transition: background 0.12s ease;
+}
+
+.tk-table tbody tr:hover td {
+    background: #f8faff;
+}
+
+.tk-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.tk-table tbody tr.tk-row-overdue td {
+    background: #fff5f5;
+}
+
+.tk-table tbody tr.tk-row-overdue:hover td {
+    background: #ffecec;
+}
+
+.tk-id-cell {
+    font-weight: 700;
+    color: var(--tk-accent-primary);
+    font-family: 'Courier New', monospace;
+    font-size: 0.8rem;
+}
+
+.tk-ticket-number {
+    text-decoration: none;
+    font-weight: 700;
+    color: var(--tk-text-primary);
+    font-size: 0.85rem;
+    transition: color 0.15s ease;
+}
+
+.tk-ticket-number:hover {
+    color: var(--tk-accent-primary);
+}
+
+.tk-ticket-title {
+    font-size: 0.75rem;
+    color: var(--tk-text-muted);
+    margin-top: 0.15rem;
+    max-width: 240px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* ----------------------------------------------------------
+   6. Badges
+   ---------------------------------------------------------- */
+.tk-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.3rem 0.7rem;
+    border-radius: var(--tk-radius-full);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+}
+
+.tk-badge-category   { background: #eeedfe; color: #4f46e5; }
+
+.tk-badge-priority-low      { background: #eaf3de; color: #3b6d11; }
+.tk-badge-priority-medium   { background: #faeeda; color: #854f0b; }
+.tk-badge-priority-high     { background: #ffedd5; color: #9a3412; }
+.tk-badge-priority-urgent   { background: #fcebeb; color: #a32d2d; }
+
+.tk-badge-status-open        { background: #e6f1fb; color: #185fa5; }
+.tk-badge-status-in_progress { background: #faeeda; color: #854f0b; }
+.tk-badge-status-resolved    { background: #eaf3de; color: #3b6d11; }
+.tk-badge-status-closed      { background: #f1f5f9; color: #5f5e5a; }
+
+.tk-badge-sla-ok      { background: #eaf3de; color: #3b6d11; }
+.tk-badge-sla-overdue { background: #fcebeb; color: #a32d2d; }
+.tk-badge-sla-none    { background: #f1f5f9; color: #94a3b8; }
+
+/* ----------------------------------------------------------
+   7. Avatar + Person cell
+   ---------------------------------------------------------- */
+.tk-avatar {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: #fff;
+    flex-shrink: 0;
+    background: linear-gradient(135deg, var(--tk-accent-primary), var(--tk-accent-teal));
+}
+
+.tk-avatar.tk-avatar-muted {
+    background: #cbd5e1;
+}
+
+.tk-person-cell {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    white-space: nowrap;
+}
+
+.tk-person-name {
+    font-size: 0.8rem;
+    max-width: 110px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.tk-person-empty {
+    color: var(--tk-text-muted);
+    font-size: 0.8rem;
+}
+
+/* ----------------------------------------------------------
+   8. Date cells
+   ---------------------------------------------------------- */
+.tk-date-cell {
+    font-size: 0.8rem;
+    color: var(--tk-text-secondary);
+    white-space: nowrap;
+}
+
+.tk-date-cell.tk-date-overdue {
+    color: var(--tk-accent-rose);
+    font-weight: 700;
+}
+
+/* ----------------------------------------------------------
+   9. Action button (view)
+   ---------------------------------------------------------- */
+.tk-btn-view {
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--tk-radius-sm);
+    border: 1.5px solid var(--tk-border);
+    background: #fff;
+    color: var(--tk-text-secondary);
+    font-size: 0.85rem;
+    text-decoration: none;
+    transition: all 0.15s ease;
+}
+
+.tk-btn-view:hover {
+    color: var(--tk-accent-primary);
+    border-color: #85b7eb;
+    background: #e6f1fb;
+    transform: translateY(-1px);
+}
+
+/* ----------------------------------------------------------
+   10. Empty state
+   ---------------------------------------------------------- */
+.tk-empty-state {
+    text-align: center;
+    padding: 3rem 1.5rem;
+    color: var(--tk-text-muted);
+}
+
+.tk-empty-state i {
+    font-size: 2.5rem;
+    margin-bottom: 0.85rem;
+    display: block;
+    opacity: 0.5;
+}
+
+.tk-empty-state p {
+    font-size: 0.875rem;
+    margin: 0;
+}
+
+/* ----------------------------------------------------------
+   11. Card footer / pagination
+   ---------------------------------------------------------- */
+.tk-table-card .card-footer {
+    background: var(--tk-surface) !important;
+    border-top: 1px solid var(--tk-border);
+    padding: 0.9rem 1.5rem;
+}
+
+.tk-footer-info {
+    font-size: 0.8rem;
+    color: var(--tk-text-muted);
+}
+
+.tk-pagination {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.tk-pagination-list {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    flex-wrap: wrap;
+}
+
+.tk-page-item {
+    display: flex;
+}
+
+.tk-page-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 34px;
+    height: 34px;
+    padding: 0 0.6rem;
+    border-radius: var(--tk-radius-sm);
+    border: 1.5px solid var(--tk-border);
+    background: #ffffff;
+    color: var(--tk-text-secondary);
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.15s ease;
+}
+
+.tk-page-item a.tk-page-link:hover {
+    background: #e6f1fb;
+    border-color: #85b7eb;
+    color: var(--tk-accent-primary);
+    transform: translateY(-1px);
+}
+
+.tk-page-item.tk-active .tk-page-link {
+    background: var(--tk-accent-primary);
+    border-color: var(--tk-accent-primary);
+    color: #fff;
+}
+
+.tk-page-item.tk-disabled .tk-page-link {
+    color: var(--tk-text-muted);
+    background: var(--tk-surface-2);
+    border-color: var(--tk-border);
+    cursor: not-allowed;
+}
+
+.tk-page-item.tk-dots .tk-page-link {
+    border: none;
+    background: transparent;
+    color: var(--tk-text-muted);
+    cursor: default;
+    min-width: 24px;
+}
+
+@media (max-width: 768px) {
+    .tk-pagination {
+        justify-content: center;
+        width: 100%;
+    }
+
+    .tk-page-link {
+        min-width: 30px;
+        height: 30px;
+        font-size: 0.75rem;
+        padding: 0 0.45rem;
+    }
+}
+
+/* ----------------------------------------------------------
+   12. Table scroll wrapper
+   ---------------------------------------------------------- */
+.tk-table-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.tk-table-scroll::-webkit-scrollbar { height: 4px; }
+.tk-table-scroll::-webkit-scrollbar-track { background: var(--tk-surface-2); }
+.tk-table-scroll::-webkit-scrollbar-thumb { background: #b5d4f4; border-radius: 10px; }
+
+/* ----------------------------------------------------------
+   13. Responsive
+   ---------------------------------------------------------- */
+@media (max-width: 768px) {
+    .tk-page-header {
+        padding: 1.5rem;
+    }
+
+    .tk-page-title {
+        font-size: 1.3rem;
+    }
+
+    .tk-filter-card {
+        padding: 1.1rem;
+    }
+
+    .tk-table thead th,
+    .tk-table tbody td {
+        padding: 0.6rem 0.5rem;
+        font-size: 0.75rem;
+    }
+
+    .tk-table thead th:first-child,
+    .tk-table tbody td:first-child {
+        padding-left: 0.85rem;
+    }
+
+    .tk-table thead th:last-child,
+    .tk-table tbody td:last-child {
+        padding-right: 0.85rem;
+    }
+
+    .tk-avatar {
+        width: 22px;
+        height: 22px;
+        font-size: 0.6rem;
+    }
+
+    .tk-btn-view {
+        width: 28px;
+        height: 28px;
+        font-size: 0.75rem;
+    }
+}
+
+/* ----------------------------------------------------------
+   14. Tabs (tk-tabs)
+   ---------------------------------------------------------- */
+.tk-tabs {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    flex-wrap: wrap;
+}
+
+.tk-tab-item {
+    display: flex;
+}
+
+.tk-tab-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.6rem 1.1rem;
+    border-radius: var(--tk-radius-md) var(--tk-radius-md) 0 0;
+    border: none;
+    background: transparent;
+    color: var(--tk-text-muted);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    border-bottom: 2.5px solid transparent;
+    margin-bottom: -1px;
+}
+
+.tk-tab-link:hover {
+    color: var(--tk-accent-primary);
+    background: #f0f7ff;
+}
+
+.tk-tab-link.tk-tab-active {
+    color: var(--tk-accent-primary);
+    border-bottom-color: var(--tk-accent-primary);
+    background: #f0f7ff;
+}
+
+.tk-tab-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 0.4rem;
+    border-radius: var(--tk-radius-full);
+    font-size: 0.7rem;
+    font-weight: 700;
+    background: var(--tk-border);
+    color: var(--tk-text-secondary);
+}
+
+.tk-tab-link.tk-tab-active .tk-tab-count {
+    background: var(--tk-accent-primary);
+    color: #fff;
+}
+
+.tk-tab-link.tk-tab-success.tk-tab-active .tk-tab-count {
+    background: var(--tk-accent-emerald);
+}
+
+/* ----------------------------------------------------------
+   15. Action button group (multi action per row)
+   ---------------------------------------------------------- */
+.tk-action-group {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+}
+
+.tk-btn-icon {
+    width: 30px;
+    height: 30px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--tk-radius-sm);
+    border: 1.5px solid var(--tk-border);
+    background: #fff;
+    color: var(--tk-text-secondary);
+    font-size: 0.8rem;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.15s ease;
+    padding: 0;
+    line-height: 1;
+}
+
+.tk-btn-icon:active { transform: scale(0.92); }
+
+.tk-btn-icon.tk-btn-view:hover {
+    color: var(--tk-accent-primary);
+    border-color: #85b7eb;
+    background: #e6f1fb;
+}
+
+.tk-btn-icon.tk-btn-take:hover {
+    color: var(--tk-accent-emerald);
+    border-color: #97c459;
+    background: #eaf3de;
+}
+
+.tk-btn-icon.tk-btn-resolve:hover {
+    color: var(--tk-accent-emerald);
+    border-color: #5dcaa5;
+    background: #e1f5ee;
+}
+
+.tk-btn-icon.tk-btn-reopen:hover {
+    color: var(--tk-accent-amber);
+    border-color: #ef9f27;
+    background: #faeeda;
+}
+
+/* ----------------------------------------------------------
+   16. Extra badges (info / warning soft / overdue tag / reopen tag)
+   ---------------------------------------------------------- */
+.tk-badge-info-soft    { background: #e6f1fb; color: #185fa5; }
+.tk-badge-warning-soft { background: #faeeda; color: #854f0b; }
+.tk-badge-success-soft { background: #eaf3de; color: #3b6d11; }
+.tk-badge-secondary-soft { background: #f1f5f9; color: #5f5e5a; }
+
+.tk-badge-overdue-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    background: var(--tk-accent-rose);
+    color: #fff;
+    border-radius: var(--tk-radius-sm);
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 0.15rem 0.5rem;
+    margin-top: 0.3rem;
+}
+
+.tk-badge-soon-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    background: var(--tk-accent-amber);
+    color: #fff;
+    border-radius: var(--tk-radius-sm);
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 0.15rem 0.5rem;
+    margin-top: 0.3rem;
+}
+
+.tk-reopen-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    background: #faeeda;
+    color: #854f0b;
+    border-radius: var(--tk-radius-full);
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 0.15rem 0.55rem;
+    margin-left: 0.35rem;
+}
+
+/* ----------------------------------------------------------
+   17. Duration / resolution time text
+   ---------------------------------------------------------- */
+.tk-duration-text {
+    font-size: 0.72rem;
+    color: var(--tk-accent-emerald);
+    margin-top: 0.15rem;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.tk-resolved-date {
+    font-size: 0.8rem;
+    color: var(--tk-accent-emerald);
+    font-weight: 600;
+}
+
+/* ----------------------------------------------------------
+   18. Modal styling (Bootstrap modal, tk theme)
+   ---------------------------------------------------------- */
+.tk-modal .modal-content {
+    border: none;
+    border-radius: var(--tk-radius-lg);
+    overflow: hidden;
+    box-shadow: var(--tk-shadow-md);
+}
+
+.tk-modal .modal-header {
+    border-bottom: none;
+    padding: 1.1rem 1.5rem;
+}
+
+.tk-modal .modal-header.tk-modal-success {
+    background: linear-gradient(135deg, var(--tk-accent-emerald), #10b981);
+    color: #fff;
+}
+
+.tk-modal .modal-header.tk-modal-warning {
+    background: linear-gradient(135deg, var(--tk-accent-amber), #f59e0b);
+    color: #fff;
+}
+
+.tk-modal .modal-title {
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.tk-modal .modal-body {
+    padding: 1.5rem;
+}
+
+.tk-modal .form-label {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--tk-text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.tk-modal .form-control {
+    border: 1.5px solid var(--tk-border);
+    border-radius: var(--tk-radius-md);
+    font-size: 0.875rem;
+    padding: 0.6rem 0.85rem;
+    background: var(--tk-surface-2);
+    transition: all 0.2s ease;
+}
+
+.tk-modal .form-control:focus {
+    outline: none;
+    border-color: var(--tk-accent-primary);
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(29, 111, 184, 0.10);
+}
+
+.tk-modal-note {
+    border-radius: var(--tk-radius-md);
+    padding: 0.85rem 1rem;
+    font-size: 0.825rem;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+}
+
+.tk-modal-note.tk-note-info {
+    background: #e6f1fb;
+    color: #185fa5;
+}
+
+.tk-modal-note.tk-note-warning {
+    background: #faeeda;
+    color: #854f0b;
+}
+
+.tk-modal .modal-footer {
+    border-top: 1px solid var(--tk-border);
+    padding: 1rem 1.5rem;
+}
+
+.tk-btn-modal-cancel {
+    padding: 0.55rem 1.25rem;
+    border-radius: var(--tk-radius-md);
+    border: 1.5px solid var(--tk-border);
+    background: #fff;
+    color: var(--tk-text-secondary);
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: all 0.15s ease;
+}
+
+.tk-btn-modal-cancel:hover {
+    background: var(--tk-surface-2);
+    border-color: var(--tk-border-strong);
+}
+
+.tk-btn-modal-confirm {
+    padding: 0.55rem 1.4rem;
+    border-radius: var(--tk-radius-md);
+    border: none;
+    color: #fff;
+    font-size: 0.85rem;
+    font-weight: 700;
+    transition: all 0.15s ease;
+}
+
+.tk-btn-modal-confirm.tk-confirm-success {
+    background: var(--tk-accent-emerald);
+}
+
+.tk-btn-modal-confirm.tk-confirm-success:hover {
+    background: #047857;
+}
+
+.tk-btn-modal-confirm.tk-confirm-warning {
+    background: var(--tk-accent-amber);
+}
+
+.tk-btn-modal-confirm.tk-confirm-warning:hover {
+    background: #b45309;
+}
+
+
