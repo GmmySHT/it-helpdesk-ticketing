@@ -571,7 +571,7 @@ body {
 .glass-card-title {
     font-size: .875rem;
     font-weight: 600;
-    color: var(--text-primary);
+    color: var(--text-muted);
     display: flex;
     align-items: center;
     gap: 7px;
@@ -615,7 +615,7 @@ body {
 .glass-table tbody td {
     padding: 9px 12px;
     font-size: .82rem;
-    color: var(--text-primary);
+    color: var(--accent-primary);
     vertical-align: middle;
 }
 
@@ -636,7 +636,7 @@ body {
 
 .ticket-title-text {
     font-weight: 500;
-    color: var(--text-primary);
+    color: var(--text-muted);
     font-size: .82rem;
     max-width: 200px;
     overflow: hidden;
@@ -694,7 +694,7 @@ body {
 }
 
 .user-cell      { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
-.user-cell-name { font-size: .75rem; color: var(--text-secondary); max-width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.user-cell-name { font-size: .75rem; color: var(--text-muted); max-width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* ══════════════════════════════════════════════════════════════
    SIDEBAR COMPONENTS
@@ -717,7 +717,7 @@ body {
     align-items: center;
     gap: 8px;
     font-size: .82rem;
-    color: var(--text-primary);
+    color: var(--text-muted);
 }
 
 .category-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
@@ -743,7 +743,7 @@ body {
 }
 
 .staff-identity { display: flex; align-items: center; gap: 7px; }
-.staff-name     { font-size: .82rem; font-weight: 600; color: var(--text-primary); }
+.staff-name     { font-size: .82rem; font-weight: 600; color: var(--text-muted); }
 .staff-rate     { font-size: .72rem; font-weight: 700; color: var(--accent-primary); }
 
 .staff-progress-track {
