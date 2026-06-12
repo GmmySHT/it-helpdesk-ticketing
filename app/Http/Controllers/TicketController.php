@@ -15,6 +15,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class TicketController extends Controller
 {
@@ -32,6 +33,7 @@ class TicketController extends Controller
         $q = $request->get('q');
         $filter = $request->get('filter');
         $hasReopen = $request->get('has_reopen');
+        $activeTab = $request->get('tab', 'active'); // Untuk tab aktif/selesai
 
         $query = Ticket::with(['user', 'category', 'assignedTo']);
 
@@ -67,6 +69,7 @@ class TicketController extends Controller
         // role-specific
         if ($user->role === 'admin') {
             // Admin melihat semua ticket
+            // Tidak ada filter tambahan
         } elseif (in_array($user->role, ['it_staff', 'it'])) {
             if ($filter === 'my' || !$filter) {
                 $query->where('assigned_to', $user->id)
@@ -78,12 +81,56 @@ class TicketController extends Controller
                 $query->where('assigned_to', $user->id);
             }
         } else {
+            // Regular user hanya melihat tiket mereka sendiri
             $query->where('user_id', $user->id);
         }
 
+        // Clone query untuk menghitung jumlah tiket per tab
+        $activeQuery = clone $query;
+        $resolvedQuery = clone $query;
+
+        // Hitung jumlah untuk tab (tanpa pagination)
+        $activeTicketsCount = $activeQuery->whereIn('status', ['open', 'in_progress'])->count();
+        $resolvedTicketsCount = $resolvedQuery->whereIn('status', ['resolved', 'closed'])->count();
+
+        // Apply tab filter ke query utama
+        if ($activeTab === 'active') {
+            $query->whereIn('status', ['open', 'in_progress']);
+        } else {
+            $query->whereIn('status', ['resolved', 'closed']);
+        }
+
+        // Paginate results
         $tickets = $query->paginate(15)->appends($request->except('page'));
 
-        return view('tickets.index', compact('tickets'));
+        // Siapkan data untuk view
+        // Untuk memudahkan, kita buat collection terpisah untuk setiap tab
+        if ($activeTab === 'active') {
+            $activeTickets = $tickets;
+            $resolvedTickets = collect([]);
+        } else {
+            $activeTickets = collect([]);
+            $resolvedTickets = $tickets;
+        }
+
+        // Log untuk debugging
+        Log::info('Tickets loaded', [
+            'user_role' => $user->role,
+            'active_tab' => $activeTab,
+            'total_tickets' => $tickets->total(),
+            'active_count' => $activeTicketsCount,
+            'resolved_count' => $resolvedTicketsCount,
+            'filter' => $filter
+        ]);
+
+        return view('tickets.index', compact(
+            'tickets',
+            'activeTickets',
+            'resolvedTickets',
+            'activeTicketsCount',
+            'resolvedTicketsCount',
+            'activeTab'
+        ));
     }
 
     /**
