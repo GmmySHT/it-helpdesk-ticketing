@@ -985,19 +985,24 @@ class TicketController extends Controller
             abort(403, 'Unauthorized');
         }
 
+        // Cek apakah ticket ini milik IT Staff yang sedang login
         if ($ticket->assigned_to !== $user->id) {
             return back()->with('error', 'Anda tidak memiliki akses untuk mengubah status ticket ini.');
         }
 
-        $request->validate([
+        // Validasi input
+        $rules = [
             'status' => 'required|in:in_queue,in_progress,resolved,closed',
-        ]);
+            'resolution_notes' => 'nullable|string',
+            'resolution_attachments.*' => 'nullable|file|max:5120|mimes:jpg,jpeg,png,pdf,doc,docx,xls,xlsx,txt'
+        ];
 
+        // Jika status resolved, resolution_notes wajib
         if ($request->status === 'resolved') {
-            $request->validate([
-                'resolution_notes' => 'required|string|min:10',
-            ]);
+            $rules['resolution_notes'] = 'required|string|min:10';
         }
+
+        $validated = $request->validate($rules);
 
         $oldStatus = $ticket->status;
         $ticket->status = $request->status;
@@ -1006,15 +1011,63 @@ class TicketController extends Controller
             $ticket->resolved_at = now();
             $ticket->resolved_by = $user->id;
             $ticket->resolution_notes = $request->resolution_notes;
+
+            // 🔥 HANDLE FILE ATTACHMENTS
+            if ($request->hasFile('resolution_attachments')) {
+                $attachments = [];
+                foreach ($request->file('resolution_attachments') as $file) {
+                    try {
+                        $path = $file->store('ticket_resolutions/' . $ticket->id, 'public');
+                        $attachments[] = [
+                            'path' => $path,
+                            'name' => $file->getClientOriginalName(),
+                            'size' => $file->getSize(),
+                            'mime' => $file->getMimeType(),
+                            'uploaded_at' => now()->toDateTimeString()
+                        ];
+                    } catch (\Exception $e) {
+                        \Log::error('Failed to upload attachment: ' . $e->getMessage());
+                        return back()->with('error', 'Gagal mengupload lampiran: ' . $e->getMessage());
+                    }
+                }
+                $ticket->resolution_attachments = json_encode($attachments);
+            }
+
+            // ✅ Tambahkan response ke ticket
+            if (class_exists(\App\Models\TicketResponse::class)) {
+                \App\Models\TicketResponse::create([
+                    'ticket_id' => $ticket->id,
+                    'user_id' => $user->id,
+                    'message' => "✅ **TICKET RESOLVED**\n\n**Solusi yang diberikan:**\n" . $request->resolution_notes,
+                    'is_internal' => false,
+                    'attachment' => null
+                ]);
+            }
+
+        } elseif ($request->status === 'in_progress') {
+            // Jika status berubah ke in_progress, pastikan assigned_to tetap sama
+            if ($ticket->assigned_to !== $user->id) {
+                $ticket->assigned_to = $user->id;
+                $ticket->assigned_by = $user->id;
+                $ticket->assigned_at = now();
+            }
         }
 
         $ticket->save();
 
+        // Catat history dengan detail
         TicketHistory::create([
             'ticket_id' => $ticket->id,
             'user_id' => $user->id,
             'action' => 'status_changed',
-            'notes' => "Status berubah dari " . ucfirst(str_replace('_', ' ', $oldStatus)) . " menjadi " . ucfirst(str_replace('_', ' ', $request->status)),
+            'notes' => "Status berubah dari " . ucfirst(str_replace('_', ' ', $oldStatus)) . " menjadi " . ucfirst(str_replace('_', ' ', $request->status)) .
+                    ($request->status === 'resolved' ? " dengan solusi: " . substr($request->resolution_notes, 0, 100) : ""),
+            'meta' => json_encode([
+                'old_status' => $oldStatus,
+                'new_status' => $request->status,
+                'has_resolution' => $request->status === 'resolved',
+                'has_attachments' => $request->status === 'resolved' && $request->hasFile('resolution_attachments')
+            ])
         ]);
 
         // Kirim notifikasi
@@ -1026,9 +1079,15 @@ class TicketController extends Controller
             }
         } elseif ($request->status === 'in_progress') {
             $ticket->user->notify(new \App\Notifications\TicketStatusUpdate($ticket, 'in_progress', $user->name));
+        } elseif ($request->status === 'in_queue') {
+            $ticket->user->notify(new \App\Notifications\TicketStatusUpdate($ticket, 'in_queue', $user->name));
         }
 
-        return back()->with('success', 'Status ticket berhasil diperbarui.');
+        $message = $request->status === 'resolved'
+            ? 'Ticket telah diselesaikan. Solusi telah dicatat.'
+            : 'Status ticket berhasil diperbarui.';
+
+        return back()->with('success', $message);
     }
 
     /**
