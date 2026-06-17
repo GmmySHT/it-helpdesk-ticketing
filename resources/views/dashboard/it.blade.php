@@ -238,7 +238,13 @@
                             <div style="font-size:.7rem;color:var(--text-muted)">{{ $t->created_at->diffForHumans() }}</div>
                         </td>
                         <td style="text-align:center">
-                            <form action="{{ route('tickets.take', $t) }}" method="POST" class="d-inline">
+                            @php
+                                // Tentukan route take berdasarkan role user
+                                $takeRoute = auth()->user()->role === 'admin'
+                                    ? route('tickets.take', $t)
+                                    : route('it.tickets.take', $t);
+                            @endphp
+                            <form action="{{ $takeRoute }}" method="POST" class="d-inline">
                                 @csrf
                                 <button type="submit"
                                         class="btn-take"
