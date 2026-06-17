@@ -892,7 +892,7 @@ class TicketController extends Controller
         // ── ACTIVE TICKETS (in_queue, in_progress) ───────────────────────
         $activeQuery = Ticket::with(['user', 'category', 'assignedTo'])
             ->where('assigned_to', $user->id)
-            ->whereIn('status', ['in_queue', 'in_progress']);
+            ->whereIn('status', ['in_queue','open', 'in_progress']);
 
         if ($q) {
             $activeQuery->where(function ($sub) use ($q) {
