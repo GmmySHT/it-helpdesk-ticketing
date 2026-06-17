@@ -218,7 +218,7 @@
                         ][$t->priority] ?? ['badge-priority-medium','fas fa-flag'];
                     @endphp
                     <tr>
-                        <td style="font-weight:700;color:var(--accent-primary)">{{ $loop->iteration }}</td>
+                        <td style="font-weight:700;color:var(--text-muted)">{{ $loop->iteration }}</td>
                         <td><a href="{{ route('tickets.show', $t) }}" class="ticket-link">{{ $t->ticket_number }}</a></td>
                         <td><span class="ticket-title-text">{{ \Illuminate\Support\Str::limit(strip_tags($t->title), 50) }}</span></td>
                         <td>

@@ -146,30 +146,107 @@
                 <div class="ts-card-body">
                     <div class="ts-resolve-box">{!! $ticket->resolution_notes !!}</div>
 
-                    @if(is_array($attachments) && count($attachments) > 0)
-                    <hr style="border:none;border-top:1px solid #bbf7d0;margin:1rem 0">
-                    <div class="ts-attach-title">
-                        <i class="fas fa-paperclip" aria-hidden="true"></i>Lampiran bukti
-                    </div>
-                    <div class="ts-attach-grid">
-                        @foreach($attachments as $att)
-                        <a href="{{ Storage::url($att['path']) }}" target="_blank" class="ts-attach-card">
-                            @if(str_contains($att['mime'], 'image'))
-                                <i class="fas fa-image" style="color:#1d6fb8" aria-hidden="true"></i>
-                            @elseif(str_contains($att['mime'], 'pdf'))
-                                <i class="fas fa-file-pdf" style="color:#e11d48" aria-hidden="true"></i>
-                            @elseif(str_contains($att['mime'], 'word'))
-                                <i class="fas fa-file-word" style="color:#2563eb" aria-hidden="true"></i>
-                            @elseif(str_contains($att['mime'], 'excel') || str_contains($att['mime'], 'spreadsheet'))
-                                <i class="fas fa-file-excel" style="color:#059669" aria-hidden="true"></i>
-                            @else
-                                <i class="fas fa-file" style="color:#6b7280" aria-hidden="true"></i>
-                            @endif
-                            <div class="ts-attach-name" title="{{ $att['name'] }}">{{ $att['name'] }}</div>
-                            <div class="ts-attach-size">{{ round($att['size'] / 1024, 1) }} KB</div>
-                        </a>
-                        @endforeach
-                    </div>
+                    {{-- 🔥 TAMPILAN LAMPIRAN YANG DIPERBAIKI --}}
+                    @php
+                        $attachments = null;
+                        if ($ticket->resolution_attachments) {
+                            $attachments = is_string($ticket->resolution_attachments)
+                                ? json_decode($ticket->resolution_attachments, true)
+                                : $ticket->resolution_attachments;
+                        }
+                    @endphp
+
+                    @if(!empty($attachments) && is_array($attachments) && count($attachments) > 0)
+                        <hr style="border:none;border-top:1px solid #bbf7d0;margin:1.25rem 0">
+
+                        <div class="ts-attach-title">
+                            <i class="fas fa-paperclip" aria-hidden="true"></i>
+                            Lampiran bukti
+                            <span class="ts-attach-badge">{{ count($attachments) }} file</span>
+                        </div>
+
+                        <div class="ts-attach-grid">
+                            @foreach($attachments as $index => $att)
+                                @php
+                                    $path = $att['path'] ?? $att['file_path'] ?? null;
+                                    $name = $att['name'] ?? $att['original_name'] ?? 'File ' . ($index + 1);
+                                    $size = $att['size'] ?? $att['file_size'] ?? 0;
+                                    $mime = $att['mime'] ?? $att['mime_type'] ?? 'application/octet-stream';
+                                    $extension = strtolower(pathinfo($name, PATHINFO_EXTENSION));
+
+                                    // Cek apakah file ada di storage
+                                    $fileExists = $path && Storage::disk('public')->exists($path);
+
+                                    // Tentukan icon berdasarkan mime/extension
+                                    $icon = 'fa-file';
+                                    $iconColor = '#6b7280';
+                                    $isImage = false;
+
+                                    if (str_contains($mime, 'image') || in_array($extension, ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg'])) {
+                                        $icon = 'fa-image';
+                                        $iconColor = '#1d6fb8';
+                                        $isImage = true;
+                                    } elseif (str_contains($mime, 'pdf') || $extension === 'pdf') {
+                                        $icon = 'fa-file-pdf';
+                                        $iconColor = '#e11d48';
+                                    } elseif (str_contains($mime, 'word') || str_contains($mime, 'document') || in_array($extension, ['doc', 'docx'])) {
+                                        $icon = 'fa-file-word';
+                                        $iconColor = '#2563eb';
+                                    } elseif (str_contains($mime, 'excel') || str_contains($mime, 'spreadsheet') || in_array($extension, ['xls', 'xlsx'])) {
+                                        $icon = 'fa-file-excel';
+                                        $iconColor = '#059669';
+                                    } elseif (str_contains($mime, 'zip') || str_contains($mime, 'rar') || in_array($extension, ['zip', 'rar', '7z'])) {
+                                        $icon = 'fa-file-archive';
+                                        $iconColor = '#d97706';
+                                    } elseif (str_contains($mime, 'text') || in_array($extension, ['txt', 'log'])) {
+                                        $icon = 'fa-file-alt';
+                                        $iconColor = '#6b7280';
+                                    } elseif (str_contains($mime, 'video') || in_array($extension, ['mp4', 'avi', 'mkv', 'mov'])) {
+                                        $icon = 'fa-file-video';
+                                        $iconColor = '#7c3aed';
+                                    } elseif (str_contains($mime, 'audio') || in_array($extension, ['mp3', 'wav', 'flac'])) {
+                                        $icon = 'fa-file-audio';
+                                        $iconColor = '#8b5cf6';
+                                    }
+                                @endphp
+
+                                @if($path && $fileExists)
+                                    <a href="{{ Storage::url($path) }}"
+                                    target="_blank"
+                                    class="ts-attach-card"
+                                    title="{{ $name }} ({{ $size > 0 ? round($size / 1024, 1) . ' KB' : '0 KB' }})">
+
+                                        {{-- Jika gambar, tampilkan thumbnail --}}
+                                        @if($isImage)
+                                            <img src="{{ Storage::url($path) }}"
+                                                alt="{{ $name }}"
+                                                class="ts-attach-preview"
+                                                loading="lazy">
+                                        @else
+                                            <i class="fas {{ $icon }}" style="color:{{ $iconColor }}" aria-hidden="true"></i>
+                                        @endif
+
+                                        <div class="ts-attach-name" title="{{ $name }}">
+                                            {{ \Illuminate\Support\Str::limit($name, 25) }}
+                                        </div>
+
+                                        <div class="ts-attach-size">
+                                            {{ $size > 0 ? round($size / 1024, 1) . ' KB' : '-' }}
+                                        </div>
+
+                                        <div class="ts-attach-download">
+                                            <i class="fas fa-download" aria-hidden="true"></i> Download
+                                        </div>
+                                    </a>
+                                @else
+                                    <div class="ts-attach-card ts-attach-error">
+                                        <i class="fas fa-exclamation-triangle" style="color:#dc2626;font-size:28px;" aria-hidden="true"></i>
+                                        <div class="ts-attach-name" style="color:#dc2626;">File tidak ditemukan</div>
+                                        <div class="ts-attach-size">{{ $name }}</div>
+                                    </div>
+                                @endif
+                            @endforeach
+                        </div>
                     @endif
                 </div>
             </div>

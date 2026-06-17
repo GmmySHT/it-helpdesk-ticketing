@@ -9,7 +9,7 @@
     RedirectMatch 403 ^/\.(env|git|htaccess|htpasswd)$
 
     # Blok akses langsung ke folder tertentu
-    RewriteRule ^(storage|vendor)/.*$ - [F,L,NC]
+    # RewriteRule ^(storage|vendor)/.*$ - [F,L,NC]
 
     # Authorization Header
     RewriteCond %{HTTP:Authorization} .

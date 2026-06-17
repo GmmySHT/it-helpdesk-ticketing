@@ -14,6 +14,8 @@
     --text-primary:   #1e293b;
     --text-secondary: #475569;
     --text-muted:     #94a3b8;
+    --sidebar-gradient: linear-gradient(135deg, #178b3a 0%, #0a2a4a5e 100%);
+    --gradient-primary: linear-gradient(135deg, #0000004d 0%, #35186b  100%);
 
     --accent-primary:  #1d6fb8;
     --accent-secondary:#2e8fcf;
@@ -583,57 +585,138 @@ body {
 .glass-card-body { padding: 1.1rem 1.25rem; }
 
 /* ══════════════════════════════════════════════════════════════
-   TABLE
+   TABLE DENGAN GLASS EFFECT (Seperti Glass Card)
 ══════════════════════════════════════════════════════════════ */
-.table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.table-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 2px;
+}
 
-.glass-table { width: 100%; border-collapse: collapse; }
+.glass-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 4px;
+}
 
+/* ── HEADER ── */
 .glass-table thead th {
-    padding: 9px 12px;
+    padding: 10px 14px;
     font-size: .68rem;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: .07em;
     color: var(--text-muted);
-    background: var(--bg-base);
-    border-bottom: 1px solid var(--border);
+    background: var(--sidebar-gradient);
+    border-bottom: 2px solid var(--border);
     white-space: nowrap;
+    position: sticky;
+    top: 0;
+    z-index: 10;
 }
 
-.glass-table thead th:first-child { padding-left: 1.25rem; }
-.glass-table thead th:last-child  { padding-right: 1.25rem; }
+.glass-table thead th:first-child {
+    padding-left: 1.25rem;
+    border-radius: 8px 0 0 0;
+}
+.glass-table thead th:last-child {
+    padding-right: 1.25rem;
+    border-radius: 0 8px 0 0;
+}
 
+/* ── BODY ROW (DEFAULT) ── */
 .glass-table tbody tr {
-    border-bottom: 1px solid #f1f5f9;
-    transition: background .12s ease;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    background: var( --gradient-primary);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-sm);
+    position: relative;
 }
 
-.glass-table tbody tr:hover { background: (var(--accent-indigo)); }
-.glass-table tbody tr:last-child { border-bottom: none; }
+/* Spasi antar row */
+.glass-table tbody tr {
+    display: table-row;
+}
 
+/* ── BODY CELL (DEFAULT) ── */
 .glass-table tbody td {
-    padding: 9px 12px;
+    padding: 10px 14px;
     font-size: .82rem;
-    color: var(--accent-primary);
+    color: var(--text-primary);
     vertical-align: middle;
+    border-bottom: 1px solid var(--border);
+    /* background: var(--sidebar-gradient); */
 }
+
+/* First & last cell rounded corners */
+.glass-table tbody tr:first-child td:first-child { border-radius: var(--radius-sm) 0 0 0; }
+.glass-table tbody tr:first-child td:last-child { border-radius: 0 var(--radius-sm) 0 0; }
+.glass-table tbody tr:last-child td:first-child { border-radius: 0 0 0 var(--radius-sm); }
+.glass-table tbody tr:last-child td:last-child { border-radius: 0 0 var(--radius-sm) 0; }
 
 .glass-table tbody td:first-child { padding-left: 1.25rem; }
 .glass-table tbody td:last-child  { padding-right: 1.25rem; }
 
+/* ── HOVER EFFECT (GLASS SEPERTI CARD) ── */
+.glass-table tbody tr:hover td {
+    background: rgba(0, 0, 0, 0.014) !important;
+    backdrop-filter: blur(12px) saturate(180%);
+    -webkit-backdrop-filter: blur(12px) saturate(180%);
+    border-bottom-color: rgba(29, 111, 184, 0.15);
+    box-shadow:
+        0 8px 32px rgba(31, 38, 135, 0.10),
+        inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+/* Hover border accent di kiri */
+.glass-table tbody tr:hover td:first-child {
+    position: relative;
+    border-left: 3px solid var(--accent-primary);
+    padding-left: calc(1.25rem - 3px);
+}
+
+/* Shimmer effect saat hover */
+.glass-table tbody tr:hover td::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+        105deg,
+        transparent 30%,
+        rgba(255, 255, 255, 0.4) 50%,
+        transparent 70%
+    );
+    pointer-events: none;
+    animation: shimmer 2s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+    0% { transform: translateX(-100%); opacity: 0; }
+    50% { opacity: 1; }
+    100% { transform: translateX(100%); opacity: 0; }
+}
+
+/* ── TICKET LINK ── */
 .ticket-link {
     font-weight: 700;
-    color: var(--accent-primary);
+    color: var(--text-muted);
     font-size: .78rem;
     font-family: 'Courier New', monospace;
     letter-spacing: .02em;
     text-decoration: none;
-    transition: color .15s;
+    transition: color .2s ease;
 }
 
-.ticket-link:hover { color: var(--accent-secondary); text-decoration: underline; }
+.ticket-link:hover {
+    color: var(--accent-secondary);
+    text-decoration: underline;
+}
 
+/* ── TICKET TITLE ── */
 .ticket-title-text {
     font-weight: 500;
     color: var(--text-muted);
@@ -645,9 +728,27 @@ body {
     display: block;
 }
 
+/* ── HOVER TEXT COLOR ── */
+.glass-table tbody tr:hover td {
+    color: var(--text-primary);
+}
+
+.glass-table tbody tr:hover .ticket-link {
+    color: var(--accent-primary);
+}
+
+.glass-table tbody tr:hover .ticket-title-text {
+    color: var(--text-primary);
+}
+
+.glass-table tbody tr:hover .text-muted {
+    color: var(--text-secondary);
+}
+
+/* ── UTILITY ── */
 .text-nowrap { white-space: nowrap; }
 .text-small  { font-size: .78rem; color: var(--text-muted); }
-
+.text-muted  { color: var(--text-muted); }
 /* ══════════════════════════════════════════════════════════════
    BADGES
 ══════════════════════════════════════════════════════════════ */
