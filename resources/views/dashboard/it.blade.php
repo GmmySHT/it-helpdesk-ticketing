@@ -317,7 +317,7 @@
                             ][$t->status] ?? 'badge-status-open';
                         @endphp
                         <tr @if($isOverdue) style="background:#fff5f5;" @endif>
-                            <td style="font-weight:700;color:var(--accent-primary)">{{ $loop->iteration }}</td>
+                            <td style="font-weight:700;color:var(--text-muted)">{{ $loop->iteration }}</td>
                             <td><a href="{{ route('tickets.show', $t) }}" class="ticket-link">{{ $t->ticket_number }}</a></td>
                             <td><span class="ticket-title-text">{{ \Illuminate\Support\Str::limit(strip_tags($t->title), 45) }}</span></td>
                             <td><span class="badge-pill {{ $sb }}">{{ ucfirst(str_replace('_', ' ', $t->status)) }}</span></td>
@@ -389,13 +389,13 @@
                             $durStr = $dh > 0 ? $dh.' jam'.($dm > 0 ? ' '.$dm.' mnt' : '') : ($dm > 0 ? $dm.' mnt' : '—');
                         @endphp
                         <tr>
-                            <td style="font-weight:700;color:var(--accent-primary)">{{ $loop->iteration }}</td>
+                            <td style="font-weight:700;color:var(--text-muted)">{{ $loop->iteration }}</td>
                             <td><a href="{{ route('tickets.show', $t) }}" class="ticket-link">{{ $t->ticket_number }}</a></td>
                             <td><span class="ticket-title-text">{{ \Illuminate\Support\Str::limit(strip_tags($t->title), 45) }}</span></td>
                             <td><span class="badge-pill badge-status-resolved">{{ ucfirst(str_replace('_', ' ', $t->status)) }}</span></td>
                             <td>
                                 @if($t->resolved_at)
-                                    <div class="text-small">{{ \Carbon\Carbon::parse($t->resolved_at)->format('d M Y H:i') }}</div>
+                                    <div class="ticket-title-text">{{ \Carbon\Carbon::parse($t->resolved_at)->format('d M Y H:i') }}</div>
                                 @else
                                     <span style="color:var(--text-muted)">—</span>
                                 @endif
@@ -460,7 +460,7 @@
                             <td><span class="ticket-title-text">{{ \Illuminate\Support\Str::limit(strip_tags($t->title), 45) }}</span></td>
                             <td><span class="badge-pill {{ $sb }}">{{ ucfirst(str_replace('_', ' ', $t->status)) }}</span></td>
                             <td><span class="badge-pill {{ $pb }}">{{ ucfirst($t->priority) }}</span></td>
-                            <td><div class="text-small">{{ $t->created_at->format('d M Y') }}</div></td>
+                            <td><div class="ticket-title-text">{{ $t->created_at->format('d M Y') }}</div></td>
                             <td style="text-align:center">
                                 <div style="display:flex;gap:4px;justify-content:center;">
                                     <a href="{{ route('tickets.show', $t) }}" class="btn-action" title="Detail">
