@@ -609,7 +609,7 @@ body {
     transition: background .12s ease;
 }
 
-.glass-table tbody tr:hover { background: #f8faff; }
+.glass-table tbody tr:hover { background: (var(--accent-indigo)); }
 .glass-table tbody tr:last-child { border-bottom: none; }
 
 .glass-table tbody td {
@@ -646,7 +646,7 @@ body {
 }
 
 .text-nowrap { white-space: nowrap; }
-.text-small  { font-size: .78rem; color: var(--text-secondary); }
+.text-small  { font-size: .78rem; color: var(--text-muted); }
 
 /* ══════════════════════════════════════════════════════════════
    BADGES

@@ -294,49 +294,96 @@
                 <div class="ts-card-body">
                     <div class="ts-actions">
 
-                        @can('updateStatus', $ticket)
-                            @if(!in_array($ticket->status, ['resolved','closed']))
-                            <button type="button" class="ts-act-btn ts-act-green"
-                                    data-bs-toggle="modal" data-bs-target="#resolveModal">
-                                <i class="fas fa-check-circle" aria-hidden="true"></i>Selesaikan ticket
-                            </button>
+                        {{-- ✅ TAKE TICKET (untuk IT Staff & Admin) --}}
+                        @if(auth()->user()->role === 'admin' || auth()->user()->role === 'it_staff' || auth()->user()->role === 'it')
+                            @if(is_null($ticket->assigned_to) && in_array($ticket->status, ['open', 'in_queue']))
+                                @php
+                                    $takeRoute = auth()->user()->role === 'admin'
+                                        ? route('tickets.take', $ticket)
+                                        : route('it.tickets.take', $ticket);
+                                @endphp
+                                <form action="{{ $takeRoute }}" method="POST" style="width:100%">
+                                    @csrf
+                                    <button type="submit" class="ts-act-btn ts-act-blue" style="width:100%">
+                                        <i class="fas fa-hand-paper" aria-hidden="true"></i>Ambil ticket ini
+                                    </button>
+                                </form>
                             @endif
-                        @endcan
+                        @endif
 
+                        {{-- ✅ RESOLVE TICKET (untuk IT Staff & Admin) --}}
+                        @if(auth()->user()->role === 'admin' || auth()->user()->role === 'it_staff' || auth()->user()->role === 'it')
+                            @if(!in_array($ticket->status, ['resolved','closed']))
+                                <button type="button" class="ts-act-btn ts-act-green"
+                                        data-bs-toggle="modal" data-bs-target="#resolveModal">
+                                    <i class="fas fa-check-circle" aria-hidden="true"></i>Selesaikan ticket
+                                </button>
+                            @endif
+                        @endif
+
+                        {{-- ✅ REOPEN TICKET (untuk IT Staff & Admin) --}}
+                        @if(auth()->user()->role === 'admin' || auth()->user()->role === 'it_staff' || auth()->user()->role === 'it')
+                            @if(in_array($ticket->status, ['resolved','closed']))
+                                <button type="button" class="ts-act-btn ts-act-amber"
+                                        data-bs-toggle="modal" data-bs-target="#reopenModal">
+                                    <i class="fas fa-undo-alt" aria-hidden="true"></i>Buka kembali ticket
+                                </button>
+                            @endif
+                        @endif
+
+                        {{-- ✅ UPDATE STATUS (untuk Admin & IT Staff) --}}
+                        @if(auth()->user()->role === 'admin' || auth()->user()->role === 'it_staff' || auth()->user()->role === 'it')
+                            @if(!in_array($ticket->status, ['resolved','closed']))
+                            <div class="dropdown" style="width:100%">
+                                <button class="ts-act-btn ts-act-amber dropdown-toggle" style="width:100%"
+                                        data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="fas fa-exchange-alt" aria-hidden="true"></i>Ubah Status
+                                </button>
+                                <ul class="dropdown-menu" style="width:100%">
+                                    @php
+                                        $statusOptions = [];
+                                        if (auth()->user()->role === 'admin') {
+                                            $statusOptions = ['open', 'in_queue', 'in_progress', 'resolved', 'closed'];
+                                        } else {
+                                            $statusOptions = ['in_queue', 'in_progress', 'resolved'];
+                                        }
+                                    @endphp
+                                    @foreach($statusOptions as $status)
+                                        @if($ticket->status != $status)
+                                            <li>
+                                                <form action="{{ $statusRoute }}" method="POST">
+                                                    @csrf
+                                                    <input type="hidden" name="status" value="{{ $status }}">
+                                                    <button type="submit" class="dropdown-item">
+                                                        <i class="fas {{ $statusIconMap[$status] ?? 'fa-circle' }} me-2" aria-hidden="true"></i>
+                                                        {{ ucfirst(str_replace('_', ' ', $status)) }}
+                                                    </button>
+                                                </form>
+                                            </li>
+                                        @endif
+                                    @endforeach
+                                </ul>
+                            </div>
+                            @endif
+                        @endif
+
+                        {{-- ✅ EDIT TICKET (hanya Admin) --}}
                         @can('update', $ticket)
                             @if(auth()->user()->role === 'admin')
-                            <a href="{{ route('tickets.edit', $ticket) }}" class="ts-act-btn ts-act-amber">
-                                <i class="fas fa-edit" aria-hidden="true"></i>Edit ticket
-                            </a>
+                                <a href="{{ route('tickets.edit', $ticket) }}" class="ts-act-btn ts-act-amber" style="width:100%;text-align:center">
+                                    <i class="fas fa-edit" aria-hidden="true"></i>Edit ticket
+                                </a>
                             @endif
                         @endcan
 
-                        @can('take', $ticket)
-                            @if(is_null($ticket->assigned_to) && $ticket->status === 'open')
-                            @php $takeRoute = auth()->user()->role === 'admin' ? route('tickets.take', $ticket) : route('it.tickets.take', $ticket); @endphp
-                            <form action="{{ $takeRoute }}" method="POST">
-                                @csrf
-                                <button type="submit" class="ts-act-btn ts-act-blue">
-                                    <i class="fas fa-hand-paper" aria-hidden="true"></i>Ambil ticket ini
-                                </button>
-                            </form>
-                            @endif
-                        @endcan
-
-                        @can('reopen', $ticket)
-                            @if(in_array($ticket->status, ['resolved','closed']))
-                            <button type="button" class="ts-act-btn ts-act-amber"
-                                    data-bs-toggle="modal" data-bs-target="#reopenModal">
-                                <i class="fas fa-undo-alt" aria-hidden="true"></i>Buka kembali ticket
-                            </button>
-                            @endif
-                        @endcan
-
+                        {{-- ✅ DELETE TICKET (hanya Admin) --}}
                         @can('delete', $ticket)
-                        <button type="button" class="ts-act-btn ts-act-red"
-                                data-bs-toggle="modal" data-bs-target="#deleteModal">
-                            <i class="fas fa-trash" aria-hidden="true"></i>Hapus ticket
-                        </button>
+                            @if(auth()->user()->role === 'admin')
+                                <button type="button" class="ts-act-btn ts-act-red"
+                                        data-bs-toggle="modal" data-bs-target="#deleteModal">
+                                    <i class="fas fa-trash" aria-hidden="true"></i>Hapus ticket
+                                </button>
+                            @endif
                         @endcan
 
                     </div>
@@ -548,5 +595,43 @@
         </div>
     </div>
 </div>
-
 @endsection
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // Buat overlay sekali
+    const overlay = document.createElement('div');
+    overlay.className = 'ts-img-overlay';
+    document.body.appendChild(overlay);
+
+    let activeImg = null;
+
+    // Semua gambar di dalam deskripsi & resolusi
+    document.querySelectorAll('.ts-desc-box img, .ts-resolve-box img').forEach(function (img) {
+        img.addEventListener('click', function () {
+            activeImg === img ? closeZoom() : openZoom(img);
+        });
+    });
+
+    overlay.addEventListener('click', closeZoom);
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') closeZoom();
+    });
+
+    function openZoom(img) {
+        if (activeImg) activeImg.classList.remove('ts-img-zoomed');
+        activeImg = img;
+        img.classList.add('ts-img-zoomed');
+        overlay.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeZoom() {
+        if (activeImg) { activeImg.classList.remove('ts-img-zoomed'); activeImg = null; }
+        overlay.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+});
+</script>
+@endpush
+

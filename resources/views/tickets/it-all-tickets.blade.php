@@ -42,7 +42,7 @@
     {{-- ══════════════════════ FILTER AREA ══════════════════════ --}}
     <div class="tk-filter-card">
         <form method="GET" class="row g-3 align-items-end">
-            <div class="col-md-3">
+            <div class="col-md-4">
                 <label class="tk-filter-label">
                     <i class="fas fa-search"></i> Cari
                 </label>
@@ -50,40 +50,28 @@
                     <i class="fas fa-search"></i>
                     <input type="text" name="q" value="{{ request('q') }}"
                            class="tk-input"
-                           placeholder="Cari ticket number / judul">
+                           placeholder="Cari ticket number / judul / nama">
                 </div>
             </div>
-            <div class="col-md-2">
+            <div class="col-md-3">
                 <label class="tk-filter-label">
                     <i class="fas fa-filter"></i> Status
                 </label>
                 <select name="status" class="tk-select">
                     <option value="">Semua Status</option>
-                    @foreach(['open','in_progress','resolved','closed'] as $s)
-                        <option value="{{ $s }}" {{ request('status')==$s ? 'selected':'' }}>{{ ucfirst(str_replace('_',' ',$s)) }}</option>
+                    @foreach(['open' => 'Open', 'in_queue' => 'Dalam Antrian', 'in_progress' => 'Sedang Dikerjakan', 'resolved' => 'Selesai', 'closed' => 'Ditutup'] as $val => $label)
+                        <option value="{{ $val }}" {{ request('status') == $val ? 'selected' : '' }}>{{ $label }}</option>
                     @endforeach
                 </select>
             </div>
-            <div class="col-md-2">
-                <label class="tk-filter-label">
-                    <i class="fas fa-flag"></i> Prioritas
-                </label>
-                <select name="priority" class="tk-select">
-                    <option value="">Semua Prioritas</option>
-                    <option value="low" {{ request('priority')=='low'?'selected':'' }}>Low</option>
-                    <option value="medium" {{ request('priority')=='medium'?'selected':'' }}>Medium</option>
-                    <option value="high" {{ request('priority')=='high'?'selected':'' }}>High</option>
-                    <option value="urgent" {{ request('priority')=='urgent'?'selected':'' }}>Urgent</option>
-                </select>
-            </div>
-            <div class="col-md-2">
+            <div class="col-md-3">
                 <label class="tk-filter-label">
                     <i class="fas fa-undo-alt"></i> Reopen
                 </label>
                 <select name="has_reopen" class="tk-select">
                     <option value="">Semua</option>
                     <option value="yes" {{ request('has_reopen') == 'yes' ? 'selected' : '' }}>Pernah Reopen</option>
-                    <option value="no" {{ request('has_reopen') == 'no' ? 'selected' : '' }}>Belum Pernah Reopen</option>
+                    <option value="no"  {{ request('has_reopen') == 'no'  ? 'selected' : '' }}>Belum Pernah Reopen</option>
                 </select>
             </div>
             <div class="col-auto">
@@ -101,10 +89,10 @@
 
     {{-- ══════════════════════ TABLE ══════════════════════ --}}
     <div class="tk-table-card">
-        <div class="card-header">
-            <h5 class="card-title">
-                <i class="fas fa-list"></i>Daftar Semua Ticket
-            </h5>
+
+        <div class="card-header-title">
+            <i class="fas fa-list"></i> Daftar Semua Ticket
+            <span class="tk-tab-count ms-1">{{ $tickets->total() }}</span>
         </div>
 
         @if($tickets->count() > 0)
@@ -112,84 +100,134 @@
             <table class="tk-table">
                 <thead>
                     <tr>
-                        <th>#ID</th>
-                        <th>Ticket / Judul</th>
+                        <th>#</th>
+                        <th>Ticket Number</th>
+                        <th>Judul</th>
                         <th>Kategori</th>
                         <th>Prioritas</th>
                         <th>Status</th>
                         <th>Ditugaskan Ke</th>
                         <th>Pembuat</th>
-                        <th>Tanggal Dibuat</th>
-                        <th>Deadline SLA</th>
+                        <th>Dibuat</th>
+                        <th>SLA Deadline</th>
                         <th>Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach($tickets as $ticket)
                     @php
-                        $isOverdue = $ticket->sla_due_at && \Carbon\Carbon::now()->gt(\Carbon\Carbon::parse($ticket->sla_due_at)) && !in_array($ticket->status, ['resolved', 'closed']);
-
-                        $priorityMap = ['low'=>'low','medium'=>'medium','high'=>'high','urgent'=>'urgent'];
-                        $statusMap   = ['open'=>'open','in_progress'=>'in_progress','resolved'=>'resolved','closed'=>'closed'];
+                        $isOverdue = $ticket->sla_due_at
+                            && \Carbon\Carbon::now()->gt(\Carbon\Carbon::parse($ticket->sla_due_at))
+                            && !in_array($ticket->status, ['resolved', 'closed']);
+                        $priorityMap = ['low' => 'low', 'medium' => 'medium', 'high' => 'high', 'urgent' => 'urgent'];
+                        $shortTitle  = \Illuminate\Support\Str::limit(strip_tags($ticket->title), 45);
                     @endphp
                     <tr @if($isOverdue) class="tk-row-overdue" @endif>
-                        <td class="tk-id-cell">#{{ $ticket->id }}</td>
+
+                        {{-- # --}}
+                        <td class="tk-id-cell">{{ ($tickets->currentPage() - 1) * $tickets->perPage() + $loop->iteration }}</td>
+
+                        {{-- Ticket Number --}}
                         <td>
                             <a href="{{ route('tickets.show', $ticket) }}" class="tk-ticket-number">
                                 {{ $ticket->ticket_number }}
                             </a>
-                            <div class="tk-ticket-title" title="{{ $ticket->title }}">
-                                {{ \Illuminate\Support\Str::limit($ticket->title, 50) }}
+                            @if($ticket->reopen_count > 0)
+                                <span class="tk-reopen-tag" title="Dibuka kembali {{ $ticket->reopen_count }} kali">
+                                    <i class="fas fa-undo-alt"></i> {{ $ticket->reopen_count }}x
+                                </span>
+                            @endif
+                        </td>
+
+                        {{-- Judul --}}
+                        <td>
+                            <div class="tk-ticket-title" style="max-width:200px" title="{{ strip_tags($ticket->title) }}">
+                                {{ $shortTitle }}
                             </div>
                         </td>
+
+                        {{-- Kategori --}}
                         <td>
                             <span class="tk-badge tk-badge-category">
-                                {{ $ticket->category->name ?? '-' }}
+                                <i class="fas fa-tag"></i> {{ $ticket->category->name ?? '-' }}
                             </span>
                         </td>
+
+                        {{-- Prioritas --}}
                         <td>
                             <span class="tk-badge tk-badge-priority-{{ $priorityMap[$ticket->priority] ?? 'medium' }}">
                                 {{ ucfirst($ticket->priority) }}
                             </span>
                         </td>
+
+                        {{-- Status --}}
                         <td>
-                            <span class="tk-badge tk-badge-status-{{ $statusMap[$ticket->status] ?? 'open' }}">
-                                {{ ucfirst(str_replace('_',' ', $ticket->status)) }}
+                            <span class="tk-badge tk-badge-status-{{ $ticket->status }}">
+                                {{ ucfirst(str_replace('_', ' ', $ticket->status)) }}
                             </span>
                         </td>
+
+                        {{-- Ditugaskan Ke --}}
                         <td>
                             @if($ticket->assignedTo)
                                 <div class="tk-person-cell">
                                     <div class="tk-avatar">{{ strtoupper(substr($ticket->assignedTo->name, 0, 1)) }}</div>
-                                    <span class="tk-person-name">{{ $ticket->assignedTo->name }}</span>
+                                    <span class="tk-person-name" title="{{ $ticket->assignedTo->name }}">
+                                        {{ \Illuminate\Support\Str::limit($ticket->assignedTo->name, 12) }}
+                                    </span>
                                 </div>
                             @else
                                 <span class="tk-person-empty">—</span>
                             @endif
                         </td>
+
+                        {{-- Pembuat --}}
                         <td>
                             <div class="tk-person-cell">
                                 <div class="tk-avatar tk-avatar-muted">{{ strtoupper(substr($ticket->user->name ?? 'U', 0, 1)) }}</div>
-                                <span class="tk-person-name">{{ $ticket->user->name ?? '-' }}</span>
+                                <span class="tk-person-name" title="{{ $ticket->user->name ?? '-' }}">
+                                    {{ \Illuminate\Support\Str::limit($ticket->user->name ?? '-', 12) }}
+                                </span>
                             </div>
                         </td>
+
+                        {{-- Dibuat --}}
                         <td class="tk-date-cell">
                             {{ $ticket->created_at->format('d M Y') }}
+                            <div class="tk-duration-text">{{ $ticket->created_at->diffForHumans() }}</div>
                         </td>
+
+                        {{-- SLA Deadline --}}
                         <td class="tk-date-cell {{ $isOverdue ? 'tk-date-overdue' : '' }}">
                             @if($ticket->sla_due_at)
-                                {{ \Carbon\Carbon::parse($ticket->sla_due_at)->format('d M Y H:i') }}
+                                <div>
+                                    <i class="fas fa-hourglass-half"></i>
+                                    {{ \Carbon\Carbon::parse($ticket->sla_due_at)->format('d M Y H:i') }}
+                                </div>
+                                @if($isOverdue)
+                                    <span class="tk-badge-overdue-tag">OVERDUE</span>
+                                @else
+                                    @php $hoursLeft = \Carbon\Carbon::now()->diffInHours(\Carbon\Carbon::parse($ticket->sla_due_at), false); @endphp
+                                    @if($hoursLeft <= 24 && $hoursLeft > 0)
+                                        <span class="tk-badge-soon-tag">H-{{ $hoursLeft }} jam</span>
+                                    @endif
+                                @endif
                             @else
                                 <span class="tk-person-empty">—</span>
                             @endif
                         </td>
+
+                        {{-- Aksi --}}
                         <td class="text-center">
-                            <a href="{{ route('tickets.show', $ticket) }}"
-                               class="tk-btn-view"
-                               title="Lihat Detail">
-                                <i class="fas fa-eye"></i>
-                            </a>
+                            <div class="tk-action-group">
+                                <a href="{{ route('tickets.show', $ticket) }}"
+                                   class="tk-btn-icon tk-btn-view"
+                                   title="Lihat Detail">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                            </div>
                         </td>
+
                     </tr>
                     @endforeach
                 </tbody>
@@ -202,17 +240,22 @@
         </div>
         @endif
 
+        {{-- Pagination --}}
+        @if($tickets->hasPages())
         <div class="card-footer">
             <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
                 <div class="tk-footer-info">
-                    Menampilkan {{ $tickets->firstItem() ?? 0 }} - {{ $tickets->lastItem() ?? 0 }} dari {{ $tickets->total() }} tiket
+                    <i class="fas fa-info-circle"></i>
+                    Menampilkan {{ $tickets->firstItem() ?? 0 }} – {{ $tickets->lastItem() ?? 0 }}
+                    dari {{ $tickets->total() }} tiket
                 </div>
                 <div>
                     {{ $tickets->appends(request()->except('page'))->links('vendor.pagination.tk-pagination') }}
                 </div>
             </div>
         </div>
-    </div>
+        @endif
 
+    </div>
 </div>
 @endsection

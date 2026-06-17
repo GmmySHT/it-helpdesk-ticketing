@@ -843,24 +843,12 @@ class TicketController extends Controller
             abort(403, 'Unauthorized');
         }
 
-        $q = $request->get('q');
-        $status = $request->get('status');
-        $priority = $request->get('priority');
+        $q         = $request->get('q');
+        $status    = $request->get('status');
         $hasReopen = $request->get('has_reopen');
 
-        $query = Ticket::with(['user', 'category', 'assignedTo']);
-
-        $query->orderByRaw("
-            CASE priority
-                WHEN 'urgent' THEN 1
-                WHEN 'high' THEN 2
-                WHEN 'medium' THEN 3
-                WHEN 'low' THEN 4
-                ELSE 5
-            END ASC
-        ");
-        $query->orderBy('sla_due_at', 'asc');
-        $query->orderBy('created_at', 'asc');
+        $query = Ticket::with(['user', 'category', 'assignedTo'])
+            ->orderBy('created_at', 'desc');
 
         if ($q) {
             $query->where(function ($sub) use ($q) {
@@ -872,10 +860,6 @@ class TicketController extends Controller
 
         if ($status) {
             $query->where('status', $status);
-        }
-
-        if ($priority) {
-            $query->where('priority', $priority);
         }
 
         if ($hasReopen === 'yes') {
@@ -900,27 +884,15 @@ class TicketController extends Controller
             abort(403, 'Unauthorized');
         }
 
-        $q = $request->get('q');
-        $status = $request->get('status');
+        $q        = $request->get('q');
+        $status   = $request->get('status');
         $priority = $request->get('priority');
-        $tab = $request->get('tab', 'active');
+        $tab      = $request->get('tab', 'active');
 
-        // ==================== ACTIVE TICKETS (in_queue, in_progress) ====================
+        // ── ACTIVE TICKETS (in_queue, in_progress) ───────────────────────
         $activeQuery = Ticket::with(['user', 'category', 'assignedTo'])
             ->where('assigned_to', $user->id)
             ->whereIn('status', ['in_queue', 'in_progress']);
-
-        $activeQuery->orderByRaw("
-            CASE priority
-                WHEN 'urgent' THEN 1
-                WHEN 'high' THEN 2
-                WHEN 'medium' THEN 3
-                WHEN 'low' THEN 4
-                ELSE 5
-            END ASC
-        ");
-        $activeQuery->orderBy('sla_due_at', 'asc');
-        $activeQuery->orderBy('created_at', 'asc');
 
         if ($q) {
             $activeQuery->where(function ($sub) use ($q) {
@@ -929,6 +901,7 @@ class TicketController extends Controller
             });
         }
 
+        // Hanya terapkan filter status jika nilainya relevan untuk tab aktif
         if ($status && in_array($status, ['in_queue', 'in_progress'])) {
             $activeQuery->where('status', $status);
         }
@@ -937,12 +910,12 @@ class TicketController extends Controller
             $activeQuery->where('priority', $priority);
         }
 
-        // ==================== RESOLVED TICKETS (resolved, closed) ====================
+        $activeQuery->orderBy('created_at', 'desc');
+
+        // ── RESOLVED TICKETS (resolved, closed) ──────────────────────────
         $resolvedQuery = Ticket::with(['user', 'category', 'assignedTo'])
             ->where('assigned_to', $user->id)
             ->whereIn('status', ['resolved', 'closed']);
-
-        $resolvedQuery->orderBy('resolved_at', 'desc');
 
         if ($q) {
             $resolvedQuery->where(function ($sub) use ($q) {
@@ -951,6 +924,7 @@ class TicketController extends Controller
             });
         }
 
+        // Hanya terapkan filter status jika nilainya relevan untuk tab resolved
         if ($status && in_array($status, ['resolved', 'closed'])) {
             $resolvedQuery->where('status', $status);
         }
@@ -959,19 +933,21 @@ class TicketController extends Controller
             $resolvedQuery->where('priority', $priority);
         }
 
-        // ==================== PAGINATION ====================
-        $activeTickets = $activeQuery->paginate(15, ['*'], 'active_page')->appends($request->except('active_page'));
-        $resolvedTickets = $resolvedQuery->paginate(15, ['*'], 'resolved_page')->appends($request->except('resolved_page'));
+        $resolvedQuery->orderBy('resolved_at', 'desc');
 
-        $activeTicketsCount = $activeQuery->count();
-        $resolvedTicketsCount = $resolvedQuery->count();
+        // ── HITUNG TOTAL SEBELUM PAGINATE ────────────────────────────────
+        $activeTicketsCount   = (clone $activeQuery)->count();
+        $resolvedTicketsCount = (clone $resolvedQuery)->count();
 
-        // Untuk view, kirimkan sesuai tab yang aktif
-        if ($tab === 'active') {
-            $tickets = $activeTickets;
-        } else {
-            $tickets = $resolvedTickets;
-        }
+        // ── PAGINATION ───────────────────────────────────────────────────
+        $activeTickets   = $activeQuery->paginate(15, ['*'], 'active_page')
+                                    ->appends($request->except('active_page'));
+
+        $resolvedTickets = $resolvedQuery->paginate(15, ['*'], 'resolved_page')
+                                        ->appends($request->except('resolved_page'));
+
+        // Untuk pagination bar di view, kirim sesuai tab aktif
+        $tickets = $tab === 'resolved' ? $resolvedTickets : $activeTickets;
 
         return view('tickets.it-my-tickets', compact(
             'activeTickets',

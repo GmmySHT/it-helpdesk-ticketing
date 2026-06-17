@@ -14,9 +14,7 @@
 }
 
 /* ── Page wrapper ───────────────────────────────────────────── */
-.ts-page {
-    padding: 0 0 2.5rem;
-}
+.ts-page { padding: 0 0 2.5rem; }
 
 /* ══════════════════════════════════════════════════════════════
    HEADER
@@ -33,10 +31,8 @@
 .ts-header::before {
     content: '';
     position: absolute;
-    right: -60px;
-    bottom: -60px;
-    width: 220px;
-    height: 220px;
+    right: -60px; bottom: -60px;
+    width: 220px; height: 220px;
     border-radius: 50%;
     background: rgba(255,255,255,0.06);
     pointer-events: none;
@@ -45,10 +41,8 @@
 .ts-header::after {
     content: '';
     position: absolute;
-    right: 80px;
-    top: -50px;
-    width: 150px;
-    height: 150px;
+    right: 80px; top: -50px;
+    width: 150px; height: 150px;
     border-radius: 50%;
     background: rgba(255,255,255,0.04);
     pointer-events: none;
@@ -81,10 +75,7 @@
     margin-bottom: 6px;
 }
 
-.ts-header-sub {
-    font-size: .8rem;
-    color: rgba(255,255,255,.65);
-}
+.ts-header-sub { font-size: .8rem; color: rgba(255,255,255,.65); }
 
 .ts-btn-back {
     background: rgba(255,255,255,.15);
@@ -110,7 +101,7 @@
     text-decoration: none;
 }
 
-/* Badge pills (header — white variants) */
+/* Badge pills */
 .ts-badge {
     display: inline-flex;
     align-items: center;
@@ -128,7 +119,6 @@
     border: 1px solid rgba(255,255,255,.3);
 }
 
-/* Colored badge variants (info panel, timeline) */
 .ts-badge-priority-low    { background: #d1fae5; color: #065f46; }
 .ts-badge-priority-medium { background: #fef3c7; color: #92400e; }
 .ts-badge-priority-high   { background: #ffedd5; color: #9a3412; }
@@ -183,8 +173,7 @@
 }
 
 .ts-card-icon {
-    width: 40px;
-    height: 40px;
+    width: 40px; height: 40px;
     border-radius: var(--ts-radius-sm);
     display: flex;
     align-items: center;
@@ -217,23 +206,108 @@
 
 .ts-card-body { padding: 1.1rem 1.25rem; }
 
-/* ── Description / resolution text box ─────────────────────── */
-.ts-desc-box {
-    background: #f9fafb;
-    border: 1px solid #f3f4f6;
+/* ══════════════════════════════════════════════════════════════
+   DESCRIPTION & RESOLUTION BOX
+══════════════════════════════════════════════════════════════ */
+.ts-desc-box,
+.ts-resolve-box {
     border-radius: var(--ts-radius-sm);
     padding: 1rem;
     font-size: .875rem;
     color: #374151;
     line-height: 1.7;
-    white-space: pre-wrap;
-    word-wrap: break-word;
+    word-break: break-word;
+    overflow: hidden;
+    /* Override pre-wrap — konten HTML dari rich-text harus render normal */
+    white-space: normal;
+}
+
+.ts-desc-box   { background: #f9fafb; border: 1px solid #f3f4f6; }
+.ts-resolve-box { background: #f0fdf4; border: 1px solid #bbf7d0; }
+
+/* ── Gambar di dalam rich-text ──────────────────────────────── */
+.ts-desc-box img,
+.ts-resolve-box img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 6px;
+    margin: .5rem 0;
+    cursor: zoom-in;
+    transition: box-shadow .15s;
+}
+
+.ts-desc-box img:hover,
+.ts-resolve-box img:hover {
+    box-shadow: 0 4px 16px rgba(0,0,0,.15);
+}
+
+/* State zoomed — diaktifkan JS */
+.ts-desc-box img.ts-img-zoomed,
+.ts-resolve-box img.ts-img-zoomed {
+    position: fixed;
+    z-index: 9999;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    max-width: 92vw;
+    max-height: 90vh;
+    width: auto;
+    height: auto;
+    border-radius: 8px;
+    box-shadow: 0 24px 64px rgba(0,0,0,.45);
+    cursor: zoom-out;
+    margin: 0;
+}
+
+/* Overlay gelap saat zoom */
+.ts-img-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 9998;
+    background: rgba(0,0,0,.72);
+    backdrop-filter: blur(3px);
+    cursor: zoom-out;
+}
+
+.ts-img-overlay.active { display: block; }
+
+/* ── Tabel dari rich-text ───────────────────────────────────── */
+.ts-desc-box table,
+.ts-resolve-box table {
+    width: 100%;
+    max-width: 100%;
+    border-collapse: collapse;
+    font-size: .85rem;
+    margin: .75rem 0;
+    display: block;
+    overflow-x: auto;
+}
+
+.ts-desc-box table th,
+.ts-desc-box table td,
+.ts-resolve-box table th,
+.ts-resolve-box table td {
+    border: 1px solid #e2e8f0;
+    padding: 6px 10px;
+    text-align: left;
+}
+
+.ts-desc-box table th,
+.ts-resolve-box table th {
+    background: #f8fafc;
+    font-weight: 600;
+}
+
+/* ── iframe / embed ─────────────────────────────────────────── */
+.ts-desc-box iframe,
+.ts-resolve-box iframe {
+    max-width: 100%;
 }
 
 /* ── Resolution card overrides ──────────────────────────────── */
-.ts-card.ts-card-resolve {
-    border-color: #bbf7d0;
-}
+.ts-card.ts-card-resolve { border-color: #bbf7d0; }
 
 .ts-resolve-head {
     background: #f0fdf4;
@@ -245,8 +319,7 @@
 }
 
 .ts-resolve-icon {
-    width: 40px;
-    height: 40px;
+    width: 40px; height: 40px;
     border-radius: var(--ts-radius-sm);
     background: #dcfce7;
     display: flex;
@@ -257,30 +330,8 @@
     flex-shrink: 0;
 }
 
-.ts-resolve-title {
-    font-size: .875rem;
-    font-weight: 600;
-    color: #065f46;
-    margin: 0;
-}
-
-.ts-resolve-sub {
-    font-size: .7rem;
-    color: #6b7280;
-    margin-top: 2px;
-}
-
-.ts-resolve-box {
-    background: #f0fdf4;
-    border: 1px solid #bbf7d0;
-    border-radius: var(--ts-radius-sm);
-    padding: 1rem;
-    font-size: .875rem;
-    color: #374151;
-    line-height: 1.7;
-    white-space: pre-wrap;
-    word-wrap: break-word;
-}
+.ts-resolve-title { font-size: .875rem; font-weight: 600; color: #065f46; margin: 0; }
+.ts-resolve-sub   { font-size: .7rem; color: #6b7280; margin-top: 2px; }
 
 /* ── Attachments ────────────────────────────────────────────── */
 .ts-attach-title {
@@ -318,11 +369,7 @@
     text-decoration: none;
 }
 
-.ts-attach-card i {
-    font-size: 2rem;
-    display: block;
-    margin-bottom: 6px;
-}
+.ts-attach-card i { font-size: 2rem; display: block; margin-bottom: 6px; }
 
 .ts-attach-name {
     font-size: .7rem;
@@ -362,12 +409,7 @@
 
 .ts-info-lbl i { font-size: 14px; }
 
-.ts-info-val {
-    font-size: .78rem;
-    color: #374151;
-    text-align: right;
-}
-
+.ts-info-val { font-size: .78rem; color: #374151; text-align: right; }
 .ts-info-val.bold    { font-weight: 600; font-family: 'Courier New', monospace; }
 .ts-info-val.danger  { color: #e11d48; font-weight: 600; }
 .ts-info-val.success { color: #059669; font-weight: 500; }
@@ -387,10 +429,8 @@
     background: #e11d48;
 }
 
-/* Avatar */
 .ts-avatar {
-    width: 26px;
-    height: 26px;
+    width: 26px; height: 26px;
     border-radius: 50%;
     display: inline-flex;
     align-items: center;
@@ -432,7 +472,6 @@
 }
 
 .ts-act-btn i { font-size: 16px; flex-shrink: 0; }
-
 .ts-act-btn:hover  { opacity: .88; transform: translateY(-1px); text-decoration: none; }
 .ts-act-btn:active { transform: scale(.98); }
 
@@ -462,26 +501,18 @@
 .ts-timeline::before {
     content: '';
     position: absolute;
-    left: 13px;
-    top: 4px;
-    bottom: 4px;
+    left: 13px; top: 4px; bottom: 4px;
     width: 1.5px;
     background: linear-gradient(to bottom, #e5e7eb, #d1d5db, #e5e7eb);
 }
 
-.ts-tl-item {
-    position: relative;
-    margin-bottom: 12px;
-}
-
+.ts-tl-item { position: relative; margin-bottom: 12px; }
 .ts-tl-item:last-child { margin-bottom: 0; }
 
 .ts-tl-dot {
     position: absolute;
-    left: -32px;
-    top: 2px;
-    width: 26px;
-    height: 26px;
+    left: -32px; top: 2px;
+    width: 26px; height: 26px;
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -517,7 +548,7 @@
 }
 
 .ts-tl-actor { font-size: .8rem; font-weight: 600; color: #1f2937; }
-.ts-tl-time  { font-size: .7rem;  color: #9ca3af; }
+.ts-tl-time  { font-size: .7rem; color: #9ca3af; }
 
 .ts-tl-tag {
     font-size: .68rem;
@@ -551,13 +582,7 @@
 
 .ts-tl-reopen-reason i { flex-shrink: 0; margin-top: 1px; }
 
-/* Timeline footer count */
-.ts-tl-footer {
-    padding: .6rem 1.25rem;
-    border-top: 1px solid #f3f4f6;
-    background: #fff;
-}
-
+.ts-tl-footer { padding: .6rem 1.25rem; border-top: 1px solid #f3f4f6; background: #fff; }
 .ts-tl-footer-text { font-size: .72rem; color: #9ca3af; display: flex; align-items: center; gap: 5px; }
 
 /* ══════════════════════════════════════════════════════════════
@@ -580,8 +605,7 @@
 .modal-header.delete  { background: linear-gradient(135deg, #e11d48, #9f1239) !important; }
 
 .modal-title { font-size: .9375rem !important; font-weight: 600 !important; }
-
-.modal-body { padding: 1.5rem !important; }
+.modal-body  { padding: 1.5rem !important; }
 
 .modal-footer {
     padding: .75rem 1.5rem !important;
@@ -589,17 +613,10 @@
     background: #f9fafb !important;
 }
 
-/* Alert overrides inside modal */
-.modal .alert {
-    border-radius: var(--ts-radius-sm);
-    font-size: .825rem;
-    border: none;
-}
+.modal .alert { border-radius: var(--ts-radius-sm); font-size: .825rem; border: none; }
 
 .modal .form-control,
-.modal .form-label {
-    font-size: .875rem;
-}
+.modal .form-label { font-size: .875rem; }
 
 .modal .form-control {
     border-radius: var(--ts-radius-sm);
@@ -612,7 +629,6 @@
     box-shadow: 0 0 0 3px rgba(13,148,136,.15);
 }
 
-/* Action buttons in modal footer */
 .modal .btn-success {
     background: linear-gradient(135deg, #059669, #0d9488);
     border: none;
@@ -649,16 +665,16 @@
 }
 
 @media (max-width: 768px) {
-    .ts-grid          { grid-template-columns: 1fr; }
-    .ts-attach-grid   { grid-template-columns: repeat(2, 1fr); }
-    .ts-info-row      { flex-direction: column; align-items: flex-start; gap: .3rem; }
-    .ts-info-val      { text-align: left; }
-    .ts-avatar-row    { justify-content: flex-start; }
-    .ts-header        { padding: 1.1rem 1.25rem; }
-    .ts-header-title  { font-size: 1rem; }
+    .ts-grid        { grid-template-columns: 1fr; }
+    .ts-attach-grid { grid-template-columns: repeat(2, 1fr); }
+    .ts-info-row    { flex-direction: column; align-items: flex-start; gap: .3rem; }
+    .ts-info-val    { text-align: left; }
+    .ts-avatar-row  { justify-content: flex-start; }
+    .ts-header      { padding: 1.1rem 1.25rem; }
+    .ts-header-title { font-size: 1rem; }
 }
 
 @media (max-width: 480px) {
-    .ts-attach-grid   { grid-template-columns: 1fr; }
-    .ts-tl-head       { flex-direction: column; align-items: flex-start; }
+    .ts-attach-grid { grid-template-columns: 1fr; }
+    .ts-tl-head     { flex-direction: column; align-items: flex-start; }
 }
