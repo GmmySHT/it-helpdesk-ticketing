@@ -3,7 +3,7 @@
 @section('title', 'Tiket Saya - IT Staff')
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('assets/css/tickets-index.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/tickets-my.css') }}">
 @endpush
 
 @section('content')
